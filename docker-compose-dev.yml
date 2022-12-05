@@ -1,0 +1,41 @@
+version: "3.5"
+
+services:
+  db:
+    image: postgres:13.1-alpine
+    restart: unless-stopped
+    container_name: teedy_db
+    environment:
+      POSTGRES_USER: "teedy.dev.user"
+      POSTGRES_PASSWORD: "teedy@yubi.123"
+      POSTGRES_DB: "teedy"
+    ports:
+      - 5432:5432
+    volumes:
+      - ~/container-data/teedy/db:/var/lib/postgresql/data
+    networks:
+      - teedy_network
+
+  service:
+    build:
+      context: .
+    image: teedy_service
+    restart: unless-stopped
+    environment:
+      DOCS_BASE_URL: "https://docs.example.com"
+      DATABASE_URL: "teedy_db"
+      DATABASE_USER: "teedy.dev.user"
+      DATABASE_PASSWORD: "teedy@yubi.123"
+    ports:
+      - 8080:8080
+    volumes:
+      - ~/container-data/teedy/storage:/storage
+    networks:
+      - teedy_network
+    depends_on:
+      - db
+
+networks:
+  teedy_network:
+    external: false
+    driver: bridge
