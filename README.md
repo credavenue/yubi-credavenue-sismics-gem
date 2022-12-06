@@ -4,7 +4,7 @@
 
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 
-Teedy is an open source, lightweight document management system for individuals and businesses.
+This a forked version of teedy, an open source, lightweight document management system to be managed internally at YUBI.
 
 <hr />
 <h2 align="center">
