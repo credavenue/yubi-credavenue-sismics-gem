@@ -6,9 +6,9 @@ services:
     restart: unless-stopped
     container_name: teedy_db
     environment:
-      POSTGRES_USER: "teedy.dev.user"
-      POSTGRES_PASSWORD: "teedy@yubi.123"
-      POSTGRES_DB: "teedy"
+      POSTGRES_USER: "dev"
+      POSTGRES_PASSWORD: "dev@123"
+      POSTGRES_DB: "teedy_db"
     ports:
       - 5432:5432
     volumes:
@@ -24,8 +24,8 @@ services:
     environment:
       DOCS_BASE_URL: "https://docs.example.com"
       DATABASE_URL: "teedy_db"
-      DATABASE_USER: "teedy.dev.user"
-      DATABASE_PASSWORD: "teedy@yubi.123"
+      DATABASE_USER: "dev"
+      DATABASE_PASSWORD: "dev@123"
     ports:
       - 8080:8080
     volumes:
@@ -37,5 +37,4 @@ services:
 
 networks:
   teedy_network:
-    external: false
     driver: bridge
