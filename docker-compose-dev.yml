@@ -26,6 +26,8 @@ services:
       DATABASE_URL: "teedy_db"
       DATABASE_USER: "dev"
       DATABASE_PASSWORD: "dev@123"
+      JWT_SECRET_KEY: "nsK0ZekLdM7pnAVe7hoQw8_mAUm4TIbA-oSReF0rKXPImvQE"
+      JWT_TTL_IN_SECONDS: 500
     ports:
       - 8080:8080
     volumes:
