@@ -6,7 +6,7 @@ import java.util.List;
 
 /**
  * Application constants.
- * 
+ *
  * @author jtremeaux
  */
 public class Constants {
@@ -14,7 +14,7 @@ public class Constants {
      * Default timezone ID.
      */
     public static final String DEFAULT_TIMEZONE_ID = "Europe/London";
-    
+
     /**
      * Administrator's default password ("admin").
      */
@@ -39,7 +39,7 @@ public class Constants {
      * Default generic user role.
      */
     public static final String DEFAULT_USER_ROLE = "user";
-    
+
     /**
      * Supported document languages.
      */
@@ -102,4 +102,10 @@ public class Constants {
      * mm per inch.
      */
     public static float MM_PER_INCH = 1 / (10 * 2.54f) * 72f;
+
+    /**
+     * JWT key constants
+     */
+    public static final String JWT_SECRET_KEY = "JWT_SECRET_KEY";
+    public static final String JWT_TTL_IN_SECONDS = "JWT_TTL_IN_SECONDS";
 }
