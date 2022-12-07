@@ -684,7 +684,7 @@ public class FileResource extends BaseResource {
      */
     @GET
     @Path("{id: [a-z0-9\\-]+}/stream")
-    public Response data(
+    public Response stream(
             @PathParam("id") final String fileId
     ) {
         authenticate();
