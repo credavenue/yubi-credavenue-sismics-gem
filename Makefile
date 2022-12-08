@@ -11,6 +11,7 @@ project_clean:
 	mvn clean
 
 project_build:
+	make project_clean
 	# skipping test for now
 	# todo: include test cases
 	mvn -DskipTests install
@@ -24,4 +25,9 @@ deploy_dev:
 	make image_build_dev
 
 	$(DOCKER_COMPOSE_DEV) up -d
+	$(DOCKER_COMPOSE_DEV) ps
+
+deploy_db_dev:
+	$(DOCKER_COMPOSE_DEV) build db
+	$(DOCKER_COMPOSE_DEV) up -d db
 	$(DOCKER_COMPOSE_DEV) ps

@@ -9,6 +9,7 @@ import java.util.Map;
 
 import com.sismics.Exceptions.ExpiredJWTException;
 import com.sismics.Exceptions.InvalidJWTException;
+import com.sismics.docs.core.model.Auth.JWTModel;
 import io.jsonwebtoken.*;
 
 
@@ -27,9 +28,9 @@ public class JWTUtil {
      * @param info             a key value pair to be signed as the part of token
      * @param expiresInSeconds if given 0 or -ve then considering to generate a lifetime token
      * @param secretKey        a key to sign with, should be greater than 256 bit
-     * @return JWT token (type: string)
+     * @return JWTModel (type: JWTModel)
      */
-    public static String generateToken(Map<String, Object> info, String secretKey, long expiresInSeconds) {
+    public static JWTModel generateToken(Map<String, Object> info, String secretKey, long expiresInSeconds) {
         // taking HS256 for signing algo, key has to be greater than 256 bit
         var signAlgo = SignatureAlgorithm.HS256;
         byte[] secretBytes = DatatypeConverter.parseBase64Binary(secretKey);
@@ -47,14 +48,16 @@ public class JWTUtil {
         builder.signWith(signingKey);
 
         // setting expiration only if provided, lifetime otherwise
+        Date expirationDate = null;
         if (expiresInSeconds > 0) {
             long expiresInMS = currentMilliseconds + (expiresInSeconds * 1000);
-            Date expirationDate = new Date(expiresInMS);
+            expirationDate = new Date(expiresInMS);
             builder.setExpiration(expirationDate);
         }
 
-        // generate and return JWT token
-        return builder.compact();
+        // generate token
+        var accessToken = builder.compact();
+        return new JWTModel(accessToken, expirationDate, expiresInSeconds);
     }
 
     /**
