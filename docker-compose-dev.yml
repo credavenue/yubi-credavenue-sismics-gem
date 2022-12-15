@@ -6,9 +6,9 @@ services:
     restart: unless-stopped
     container_name: teedy_db
     environment:
-      POSTGRES_USER: "dev"
-      POSTGRES_PASSWORD: "dev@123"
-      POSTGRES_DB: "teedy_db"
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev@123
+      POSTGRES_DB: teedy_dms_db
     ports:
       - 5432:5432
     volumes:
@@ -16,22 +16,25 @@ services:
     networks:
       - teedy_network
 
-  service:
+  teedy:
     build:
       context: .
-    image: teedy_service
+    image: teedy
     restart: unless-stopped
+    container_name: teedy_service
     environment:
-      DOCS_BASE_URL: "https://docs.example.com"
-      DATABASE_URL: "teedy_db"
-      DATABASE_USER: "dev"
-      DATABASE_PASSWORD: "dev@123"
-      JWT_SECRET_KEY: "nsK0ZekLdM7pnAVe7hoQw8_mAUm4TIbA-oSReF0rKXPImvQE"
+      DOCS_BASE_URL: https://docs.example.com
+      DATABASE_URL: teedy_dms_db
+      DATABASE_USER: dev
+      DATABASE_PASSWORD: dev@123
+      DOCS_ADMIN_EMAIL_INIT: prashant.kumar@go-yubi.com
+      DOCS_ADMIN_PASSWORD_INIT: $2a$12$.E8kopCeL5xhgQwomLh.leCRwHabt4YR06tPS/xo1BRcxZ9lUIO5i
+      JWT_SECRET_KEY: nsK0ZekLdM7pnAVe7hoQw8_mAUm4TIbA-oSReF0rKXPImvQE
       JWT_TTL_IN_SECONDS: 500
     ports:
       - 8080:8080
     volumes:
-      - ~/container-data/teedy/storage:/storage
+      - ~/container-data/teedy/storage:/data
     networks:
       - teedy_network
     depends_on:

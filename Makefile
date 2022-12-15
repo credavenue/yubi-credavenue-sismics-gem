@@ -24,10 +24,16 @@ deploy_dev:
 	make project_build
 	make image_build_dev
 
+	make deploy_db_dev
+	timeout 100
 	$(DOCKER_COMPOSE_DEV) up -d
 	$(DOCKER_COMPOSE_DEV) ps
 
 deploy_db_dev:
 	$(DOCKER_COMPOSE_DEV) build db
 	$(DOCKER_COMPOSE_DEV) up -d db
+	$(DOCKER_COMPOSE_DEV) ps
+
+stop_containers_dev:
+	$(DOCKER_COMPOSE_DEV) stop
 	$(DOCKER_COMPOSE_DEV) ps
