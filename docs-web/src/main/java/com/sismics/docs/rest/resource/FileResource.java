@@ -26,6 +26,7 @@ import com.sismics.util.HttpUtil;
 import com.sismics.util.JsonUtil;
 import com.sismics.util.context.ThreadLocalContext;
 import com.sismics.util.mime.MimeType;
+import fr.opensagres.odfdom.converter.core.utils.IOUtils;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
@@ -52,7 +53,7 @@ import java.util.zip.ZipOutputStream;
 
 /**
  * File REST resources.
- * 
+ *
  * @author bgamard
  */
 @Path("/file")
@@ -60,6 +61,9 @@ public class FileResource extends BaseResource {
     /**
      * Add a file (with or without a document).
      *
+     * @param documentId   Document ID
+     * @param fileBodyPart File to add
+     * @return Response
      * @api {put} /file Add a file
      * @apiDescription A file can be added without associated document, and will go in a temporary storage waiting for one.
      * This resource accepts only multipart/form-data.
@@ -80,10 +84,6 @@ public class FileResource extends BaseResource {
      * @apiError (server) FileError Error adding a file
      * @apiPermission user
      * @apiVersion 1.5.0
-     *
-     * @param documentId Document ID
-     * @param fileBodyPart File to add
-     * @return Response
      */
     @PUT
     @Consumes("multipart/form-data")
@@ -94,7 +94,7 @@ public class FileResource extends BaseResource {
         if (!authenticate()) {
             throw new ForbiddenClientException();
         }
-        
+
         // Validate input data
         ValidationUtil.validateRequired(fileBodyPart, "file");
 
@@ -109,7 +109,7 @@ public class FileResource extends BaseResource {
                 throw new NotFoundException();
             }
         }
-        
+
         // Keep unencrypted data temporary on disk
         java.nio.file.Path unencryptedFile;
         long fileSize;
@@ -139,10 +139,12 @@ public class FileResource extends BaseResource {
             throw new ServerException("FileError", "Error adding a file", e);
         }
     }
-    
+
     /**
      * Attach a file to a document.
      *
+     * @param id File ID
+     * @return Response
      * @api {post} /file/:fileId/attach Attach a file to a document
      * @apiName PostFileAttach
      * @apiGroup File
@@ -155,9 +157,6 @@ public class FileResource extends BaseResource {
      * @apiError (server) AttachError Error attaching file to document
      * @apiPermission user
      * @apiVersion 1.5.0
-     *
-     * @param id File ID
-     * @return Response
      */
     @POST
     @Path("{id: [a-z0-9\\-]+}/attach")
@@ -170,11 +169,11 @@ public class FileResource extends BaseResource {
 
         // Validate input data
         ValidationUtil.validateRequired(documentId, "documentId");
-        
+
         // Get the current user
         UserDao userDao = new UserDao();
         User user = userDao.getById(principal.getId());
-        
+
         // Get the document and the file
         DocumentDao documentDao = new DocumentDao();
         FileDao fileDao = new FileDao();
@@ -183,17 +182,17 @@ public class FileResource extends BaseResource {
         if (file == null || documentDto == null) {
             throw new NotFoundException();
         }
-        
+
         // Check that the file is orphan
         if (file.getDocumentId() != null) {
             throw new ClientException("IllegalFile", MessageFormat.format("File not orphan: {0}", id));
         }
-        
+
         // Update the file
         file.setDocumentId(documentId);
         file.setOrder(fileDao.getByDocumentId(principal.getId(), documentId).size());
         fileDao.update(file);
-        
+
         // Raise a new file updated event and document updated event (it wasn't sent during file creation)
         try {
             java.nio.file.Path storedFile = DirectoryUtil.getStorageDirectory().resolve(id);
@@ -205,7 +204,7 @@ public class FileResource extends BaseResource {
             fileUpdatedAsyncEvent.setFileId(file.getId());
             fileUpdatedAsyncEvent.setUnencryptedFile(unencryptedFile);
             ThreadLocalContext.get().addAsyncEvent(fileUpdatedAsyncEvent);
-            
+
             DocumentUpdatedAsyncEvent documentUpdatedAsyncEvent = new DocumentUpdatedAsyncEvent();
             documentUpdatedAsyncEvent.setUserId(principal.getId());
             documentUpdatedAsyncEvent.setDocumentId(documentId);
@@ -223,6 +222,8 @@ public class FileResource extends BaseResource {
     /**
      * Update a file.
      *
+     * @param id File ID
+     * @return Response
      * @api {post} /file/:id Update a file
      * @apiName PostFile
      * @apiGroup File
@@ -233,9 +234,6 @@ public class FileResource extends BaseResource {
      * @apiError (client) ValidationError Validation error
      * @apiPermission user
      * @apiVersion 1.6.0
-     *
-     * @param id File ID
-     * @return Response
      */
     @POST
     @Path("{id: [a-z0-9\\-]+}")
@@ -265,6 +263,8 @@ public class FileResource extends BaseResource {
     /**
      * Process a file manually.
      *
+     * @param id File ID
+     * @return Response
      * @api {post} /file/:id/process Process a file manually
      * @apiName PostFileProcess
      * @apiGroup File
@@ -275,9 +275,6 @@ public class FileResource extends BaseResource {
      * @apiError (server) ProcessingError Processing error
      * @apiPermission user
      * @apiVersion 1.6.0
-     *
-     * @param id File ID
-     * @return Response
      */
     @POST
     @Path("{id: [a-z0-9\\-]+}/process")
@@ -322,10 +319,13 @@ public class FileResource extends BaseResource {
                 .add("status", "ok");
         return Response.ok().entity(response.build()).build();
     }
-    
+
     /**
      * Reorder files.
      *
+     * @param documentId Document ID
+     * @param idList     List of files ID in the new order
+     * @return Response
      * @api {post} /file/:reorder Reorder files
      * @apiName PostFileReorder
      * @apiGroup File
@@ -337,10 +337,6 @@ public class FileResource extends BaseResource {
      * @apiError (client) NotFound Document not found
      * @apiPermission user
      * @apiVersion 1.5.0
-     *
-     * @param documentId Document ID
-     * @param idList List of files ID in the new order
-     * @return Response
      */
     @POST
     @Path("reorder")
@@ -350,17 +346,17 @@ public class FileResource extends BaseResource {
         if (!authenticate()) {
             throw new ForbiddenClientException();
         }
-        
+
         // Validate input data
         ValidationUtil.validateRequired(documentId, "id");
         ValidationUtil.validateRequired(idList, "order");
-        
+
         // Get the document
         AclDao aclDao = new AclDao();
         if (!aclDao.checkPermission(documentId, PermType.WRITE, getTargetIdList(null))) {
             throw new NotFoundException();
         }
-        
+
         // Reorder files
         FileDao fileDao = new FileDao();
         for (File file : fileDao.getByDocumentId(principal.getId(), documentId)) {
@@ -375,16 +371,19 @@ public class FileResource extends BaseResource {
         event.setUserId(principal.getId());
         event.setDocumentId(documentId);
         ThreadLocalContext.get().addAsyncEvent(event);
-        
+
         // Always return OK
         JsonObjectBuilder response = Json.createObjectBuilder()
                 .add("status", "ok");
         return Response.ok().entity(response.build()).build();
     }
-    
+
     /**
      * Returns files linked to a document or not linked to any document.
      *
+     * @param documentId Document ID
+     * @param shareId    Sharing ID
+     * @return Response
      * @api {get} /file/list Get files
      * @apiName GetFileList
      * @apiGroup File
@@ -404,10 +403,6 @@ public class FileResource extends BaseResource {
      * @apiError (server) FileError Unable to get the size of a file
      * @apiPermission none
      * @apiVersion 1.5.0
-     *
-     * @param documentId Document ID
-     * @param shareId Sharing ID
-     * @return Response
      */
     @GET
     @Path("list")
@@ -415,7 +410,7 @@ public class FileResource extends BaseResource {
             @QueryParam("id") String documentId,
             @QueryParam("share") String shareId) {
         boolean authenticated = authenticate();
-        
+
         // Check document visibility
         if (documentId != null) {
             AclDao aclDao = new AclDao();
@@ -425,7 +420,7 @@ public class FileResource extends BaseResource {
         } else if (!authenticated) {
             throw new ForbiddenClientException();
         }
-        
+
         FileDao fileDao = new FileDao();
         List<File> fileList = fileDao.getByDocumentId(principal.getId(), documentId);
 
@@ -445,7 +440,7 @@ public class FileResource extends BaseResource {
                 throw new ServerException("FileError", "Unable to get the size of " + fileDb.getId(), e);
             }
         }
-        
+
         JsonObjectBuilder response = Json.createObjectBuilder()
                 .add("files", files);
         return Response.ok().entity(response.build()).build();
@@ -454,6 +449,8 @@ public class FileResource extends BaseResource {
     /**
      * List all versions of a file.
      *
+     * @param id File ID
+     * @return Response
      * @api {get} /file/id/versions Get versions of a file
      * @apiName GetFileVersions
      * @apiGroup File
@@ -468,9 +465,6 @@ public class FileResource extends BaseResource {
      * @apiError (client) NotFound File not found
      * @apiPermission user
      * @apiVersion 1.5.0
-     *
-     * @param id File ID
-     * @return Response
      */
     @GET
     @Path("{id: [a-z0-9\\-]+}/versions")
@@ -501,10 +495,12 @@ public class FileResource extends BaseResource {
                 .add("files", files);
         return Response.ok().entity(response.build()).build();
     }
-    
+
     /**
      * Deletes a file.
      *
+     * @param id File ID
+     * @return Response
      * @api {delete} /file/:id Delete a file
      * @apiName DeleteFile
      * @apiGroup File
@@ -515,9 +511,6 @@ public class FileResource extends BaseResource {
      * @apiError (client) NotFound File or document not found
      * @apiPermission user
      * @apiVersion 1.5.0
-     *
-     * @param id File ID
-     * @return Response
      */
     @DELETE
     @Path("{id: [a-z0-9\\-]+}")
@@ -533,7 +526,7 @@ public class FileResource extends BaseResource {
         // Delete the file
         FileDao fileDao = new FileDao();
         fileDao.delete(file.getId(), principal.getId());
-        
+
         // Update the user quota
         UserDao userDao = new UserDao();
         User user = userDao.getById(principal.getId());
@@ -544,13 +537,13 @@ public class FileResource extends BaseResource {
         } catch (IOException e) {
             // The file doesn't exists on disk, which is weird, but not fatal
         }
-        
+
         // Raise a new file deleted event
         FileDeletedAsyncEvent fileDeletedAsyncEvent = new FileDeletedAsyncEvent();
         fileDeletedAsyncEvent.setUserId(principal.getId());
         fileDeletedAsyncEvent.setFileId(file.getId());
         ThreadLocalContext.get().addAsyncEvent(fileDeletedAsyncEvent);
-        
+
         if (file.getDocumentId() != null) {
             // Raise a new document updated
             DocumentUpdatedAsyncEvent documentUpdatedAsyncEvent = new DocumentUpdatedAsyncEvent();
@@ -558,16 +551,18 @@ public class FileResource extends BaseResource {
             documentUpdatedAsyncEvent.setDocumentId(file.getDocumentId());
             ThreadLocalContext.get().addAsyncEvent(documentUpdatedAsyncEvent);
         }
-        
+
         // Always return OK
         JsonObjectBuilder response = Json.createObjectBuilder()
                 .add("status", "ok");
         return Response.ok().entity(response.build()).build();
     }
-    
+
     /**
      * Returns a file.
      *
+     * @param fileId File ID
+     * @return Response
      * @api {get} /file/:id/data Get a file data
      * @apiName GetFile
      * @apiGroup File
@@ -581,9 +576,6 @@ public class FileResource extends BaseResource {
      * @apiError (server) ServiceUnavailable Error reading the file
      * @apiPermission none
      * @apiVersion 1.5.0
-     *
-     * @param fileId File ID
-     * @return Response
      */
     @GET
     @Path("{id: [a-z0-9\\-]+}/data")
@@ -592,7 +584,7 @@ public class FileResource extends BaseResource {
             @QueryParam("share") String shareId,
             @QueryParam("size") String size) {
         authenticate();
-        
+
         if (size != null && !Lists.newArrayList("web", "thumb", "content").contains(size)) {
             throw new ClientException("SizeError", "Size must be web, thumb or content");
         }
@@ -629,19 +621,19 @@ public class FileResource extends BaseResource {
             mimeType = file.getMimeType();
             decrypt = true; // Original files are encrypted
         }
-        
+
         // Stream the output and decrypt it if necessary
         StreamingOutput stream;
-        
+
         // A file is always encrypted by the creator of it
         User user = userDao.getById(file.getUserId());
-        
+
         // Write the decrypted file to the output
         try {
             InputStream fileInputStream = Files.newInputStream(storedFile);
             final InputStream responseInputStream = decrypt ?
                     EncryptionUtil.decryptInputStream(fileInputStream, user.getPrivateKey()) : fileInputStream;
-                    
+
             stream = outputStream -> {
                 try {
                     ByteStreams.copy(responseInputStream, outputStream);
@@ -673,9 +665,74 @@ public class FileResource extends BaseResource {
         return builder.build();
     }
 
+
+    /**
+     * Stream a file.
+     *
+     * @param fileId File ID
+     * @return Response
+     * @api {get} /file/:id/stream Stream a file data
+     * @apiName StreamFile
+     * @apiGroup File
+     * @apiParam {String} id File ID
+     * @apiSuccess File stream data
+     * @apiError (client) ForbiddenError Access denied or document not visible
+     * @apiError (client) NotFound File not found
+     * @apiError (server) ServiceUnavailable Error reading the file
+     * @apiPermission none
+     * @apiVersion 1.5.0
+     */
+    @GET
+    @Path("{id: [a-z0-9\\-]+}/stream")
+    public Response stream(
+            @PathParam("id") final String fileId
+    ) {
+        authenticate();
+        // fetch file from db
+        File file = findFile(fileId, null);
+        var storedFile = DirectoryUtil.getStorageDirectory().resolve(fileId);
+        var mimeType = file.getMimeType();
+        StreamingOutput responseStream;
+
+        try {
+            InputStream inputStream = Files.newInputStream(storedFile);
+            UserDao userDao = new UserDao();
+            var userPrivateKey = userDao.getById(file.getUserId()).getPrivateKey();
+            final InputStream decruptedInputStream = EncryptionUtil.decryptInputStream(inputStream, userPrivateKey);
+            responseStream = outputStream -> {
+                try {
+                    ByteStreams.copy(decruptedInputStream, outputStream);
+                } finally {
+                    try {
+                        decruptedInputStream.close();
+                        outputStream.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
+        } catch (Exception e) {
+            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+        }
+
+        Response.ResponseBuilder response = Response.ok(responseStream);
+        response.header(HttpHeaders.CONTENT_DISPOSITION, "filename=\"" + file.getFullName("data") + "\"");
+        response.header(HttpHeaders.CONTENT_TYPE, mimeType);
+
+        // cache privately (user specific and not CDN)
+        response.header(HttpHeaders.CACHE_CONTROL, "private");
+
+        // todo: expire related time to config
+        response.header(HttpHeaders.EXPIRES, HttpUtil.buildExpiresHeader(3_600_000L * 24L * 365L));
+        return response.build();
+    }
+
+
     /**
      * Returns all files from a document, zipped.
      *
+     * @param documentId Document ID
+     * @return Response
      * @api {get} /file/zip Get zipped files
      * @apiName GetFileZip
      * @apiGroup File
@@ -686,9 +743,6 @@ public class FileResource extends BaseResource {
      * @apiError (server) InternalServerError Error creating the ZIP file
      * @apiPermission none
      * @apiVersion 1.5.0
-     *
-     * @param documentId Document ID
-     * @return Response
      */
     @GET
     @Path("zip")
@@ -697,19 +751,19 @@ public class FileResource extends BaseResource {
             @QueryParam("id") String documentId,
             @QueryParam("share") String shareId) {
         authenticate();
-        
+
         // Get the document
         DocumentDao documentDao = new DocumentDao();
         DocumentDto documentDto = documentDao.getDocument(documentId, PermType.READ, getTargetIdList(shareId));
         if (documentDto == null) {
             throw new NotFoundException();
         }
-        
+
         // Get files and user associated with this document
         FileDao fileDao = new FileDao();
         final UserDao userDao = new UserDao();
         final List<File> fileList = fileDao.getByDocumentId(principal.getId(), documentId);
-        
+
         // Create the ZIP stream
         StreamingOutput stream = outputStream -> {
             try (ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream)) {
@@ -735,7 +789,7 @@ public class FileResource extends BaseResource {
             }
             outputStream.close();
         };
-        
+
         // Write to the output
         return Response.ok(stream)
                 .header("Content-Type", "application/zip")
@@ -746,7 +800,7 @@ public class FileResource extends BaseResource {
     /**
      * Find a file with access rights checking.
      *
-     * @param fileId File ID
+     * @param fileId  File ID
      * @param shareId Share ID
      * @return File
      */
