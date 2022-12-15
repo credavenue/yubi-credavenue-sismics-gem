@@ -25,7 +25,6 @@ deploy_dev:
 	make image_build_dev
 
 	make deploy_db_dev
-	timeout 100
 	$(DOCKER_COMPOSE_DEV) up -d
 	$(DOCKER_COMPOSE_DEV) ps
 
