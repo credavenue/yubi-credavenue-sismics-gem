@@ -666,66 +666,66 @@ public class FileResource extends BaseResource {
     }
 
 
-    /**
-     * Stream a file.
-     *
-     * @param fileId File ID
-     * @return Response
-     * @api {get} /file/:id/stream Stream a file data
-     * @apiName StreamFile
-     * @apiGroup File
-     * @apiParam {String} id File ID
-     * @apiSuccess File stream data
-     * @apiError (client) ForbiddenError Access denied or document not visible
-     * @apiError (client) NotFound File not found
-     * @apiError (server) ServiceUnavailable Error reading the file
-     * @apiPermission none
-     * @apiVersion 1.5.0
-     */
-    @GET
-    @Path("{id: [a-z0-9\\-]+}/stream")
-    public Response stream(
-            @PathParam("id") final String fileId
-    ) {
-        authenticate();
-        // fetch file from db
-        File file = findFile(fileId, null);
-        var storedFile = DirectoryUtil.getStorageDirectory().resolve(fileId);
-        var mimeType = file.getMimeType();
-        StreamingOutput responseStream;
-
-        try {
-            InputStream inputStream = Files.newInputStream(storedFile);
-            UserDao userDao = new UserDao();
-            var userPrivateKey = userDao.getById(file.getUserId()).getPrivateKey();
-            final InputStream decruptedInputStream = EncryptionUtil.decryptInputStream(inputStream, userPrivateKey);
-            responseStream = outputStream -> {
-                try {
-                    ByteStreams.copy(decruptedInputStream, outputStream);
-                } finally {
-                    try {
-                        decruptedInputStream.close();
-                        outputStream.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            };
-        } catch (Exception e) {
-            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
-        }
-
-        Response.ResponseBuilder response = Response.ok(responseStream);
-        response.header(HttpHeaders.CONTENT_DISPOSITION, "filename=\"" + file.getFullName("data") + "\"");
-        response.header(HttpHeaders.CONTENT_TYPE, mimeType);
-
-        // cache privately (user specific and not CDN)
-        response.header(HttpHeaders.CACHE_CONTROL, "private");
-
-        // todo: expire related time to config
-        response.header(HttpHeaders.EXPIRES, HttpUtil.buildExpiresHeader(3_600_000L * 24L * 365L));
-        return response.build();
-    }
+//    /**
+//     * Stream a file.
+//     *
+//     * @param fileId File ID
+//     * @return Response
+//     * @api {get} /file/:id/stream Stream a file data
+//     * @apiName StreamFile
+//     * @apiGroup File
+//     * @apiParam {String} id File ID
+//     * @apiSuccess File stream data
+//     * @apiError (client) ForbiddenError Access denied or document not visible
+//     * @apiError (client) NotFound File not found
+//     * @apiError (server) ServiceUnavailable Error reading the file
+//     * @apiPermission none
+//     * @apiVersion 1.5.0
+//     */
+//    @GET
+//    @Path("{id: [a-z0-9\\-]+}/stream")
+//    public Response stream(
+//            @PathParam("id") final String fileId
+//    ) {
+//        authenticate();
+//        // fetch file from db
+//        File file = findFile(fileId, null);
+//        var storedFile = DirectoryUtil.getStorageDirectory().resolve(fileId);
+//        var mimeType = file.getMimeType();
+//        StreamingOutput responseStream;
+//
+//        try {
+//            InputStream inputStream = Files.newInputStream(storedFile);
+//            UserDao userDao = new UserDao();
+//            var userPrivateKey = userDao.getById(file.getUserId()).getPrivateKey();
+//            final InputStream decruptedInputStream = EncryptionUtil.decryptInputStream(inputStream, userPrivateKey);
+//            responseStream = outputStream -> {
+//                try {
+//                    ByteStreams.copy(decruptedInputStream, outputStream);
+//                } finally {
+//                    try {
+//                        decruptedInputStream.close();
+//                        outputStream.close();
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//            };
+//        } catch (Exception e) {
+//            return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+//        }
+//
+//        Response.ResponseBuilder response = Response.ok(responseStream);
+//        response.header(HttpHeaders.CONTENT_DISPOSITION, "filename=\"" + file.getFullName("data") + "\"");
+//        response.header(HttpHeaders.CONTENT_TYPE, mimeType);
+//
+//        // cache privately (user specific and not CDN)
+//        response.header(HttpHeaders.CACHE_CONTROL, "private");
+//
+//        // todo: expire related time to config
+//        response.header(HttpHeaders.EXPIRES, HttpUtil.buildExpiresHeader(3_600_000L * 24L * 365L));
+//        return response.build();
+//    }
 
 
     /**
