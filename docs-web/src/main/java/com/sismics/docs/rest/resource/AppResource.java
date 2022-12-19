@@ -11,7 +11,7 @@ import com.sismics.docs.core.event.RebuildIndexAsyncEvent;
 import com.sismics.docs.core.model.context.AppContext;
 import com.sismics.docs.core.model.jpa.Config;
 import com.sismics.docs.core.model.jpa.File;
-import com.sismics.docs.core.service.InboxService;
+// import com.sismics.docs.core.service.InboxService;
 import com.sismics.docs.core.util.ConfigUtil;
 import com.sismics.docs.core.util.DirectoryUtil;
 import com.sismics.docs.core.util.authentication.LdapAuthenticationHandler;
@@ -370,16 +370,20 @@ public class AppResource extends BaseResource {
         }
 
         // Informations about the last synchronization
-        InboxService inboxService = AppContext.getInstance().getInboxService();
-        JsonObjectBuilder lastSync = Json.createObjectBuilder();
-        if (inboxService.getLastSyncDate() == null) {
-            lastSync.addNull("date");
-        } else {
-            lastSync.add("date", inboxService.getLastSyncDate().getTime());
-        }
-        lastSync.add("error", JsonUtil.nullable(inboxService.getLastSyncError()));
-        lastSync.add("count", inboxService.getLastSyncMessageCount());
-        response.add("last_sync", lastSync);
+
+        /**
+         * .
+         InboxService inboxService = AppContext.getInstance().getInboxService();
+         JsonObjectBuilder lastSync = Json.createObjectBuilder();
+         if (inboxService.getLastSyncDate() == null) {
+         lastSync.addNull("date");
+         } else {
+         lastSync.add("date", inboxService.getLastSyncDate().getTime());
+         }
+         lastSync.add("error", JsonUtil.nullable(inboxService.getLastSyncError()));
+         lastSync.add("count", inboxService.getLastSyncMessageCount());
+         response.add("last_sync", lastSync);
+         */
 
         return Response.ok().entity(response.build()).build();
     }
@@ -475,11 +479,14 @@ public class AppResource extends BaseResource {
         if (!authenticate()) {
             throw new ForbiddenClientException();
         }
-        checkBaseFunction(BaseFunction.ADMIN);
-
         return Response.ok().entity(Json.createObjectBuilder()
-                .add("count", AppContext.getInstance().getInboxService().testInbox())
+                .add("count", 0)
                 .build()).build();
+
+        // checkBaseFunction(BaseFunction.ADMIN);
+        // return Response.ok().entity(Json.createObjectBuilder()
+        //      .add("count", AppContext.getInstance().getInboxService().testInbox())
+        //      .build()).build();
     }
 
     /**

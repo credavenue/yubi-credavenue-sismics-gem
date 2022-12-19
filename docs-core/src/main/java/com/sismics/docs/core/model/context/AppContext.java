@@ -8,7 +8,7 @@ import com.sismics.docs.core.dao.UserDao;
 import com.sismics.docs.core.listener.async.*;
 import com.sismics.docs.core.model.jpa.User;
 import com.sismics.docs.core.service.FileService;
-import com.sismics.docs.core.service.InboxService;
+// import com.sismics.docs.core.service.InboxService;
 import com.sismics.docs.core.util.PdfUtil;
 import com.sismics.docs.core.util.indexing.IndexingHandler;
 import com.sismics.util.ClasspathScanner;
@@ -57,7 +57,7 @@ public class AppContext {
     /**
      * Inbox scanning service.
      */
-    private InboxService inboxService;
+    // private InboxService inboxService;
 
     /**
      * File service.
@@ -97,9 +97,9 @@ public class AppContext {
         fileService.awaitRunning();
 
         // Start inbox service
-        inboxService = new InboxService();
-        inboxService.startAsync();
-        inboxService.awaitRunning();
+        // inboxService = new InboxService();
+        // inboxService.startAsync();
+        // inboxService.awaitRunning();
 
         // Register fonts
         PdfUtil.registerFonts();
@@ -205,9 +205,9 @@ public class AppContext {
         return indexingHandler;
     }
 
-    public InboxService getInboxService() {
-        return inboxService;
-    }
+    // public InboxService getInboxService() {
+    //     return inboxService;
+    // }
 
     public FileService getFileService() {
         return fileService;
@@ -228,10 +228,10 @@ public class AppContext {
             indexingHandler.shutDown();
         }
 
-        if (inboxService != null) {
-            inboxService.stopAsync();
-            inboxService.awaitTerminated();
-        }
+        // if (inboxService != null) {
+        //     inboxService.stopAsync();
+        //     inboxService.awaitTerminated();
+        // }
 
         if (fileService != null) {
             fileService.stopAsync();
