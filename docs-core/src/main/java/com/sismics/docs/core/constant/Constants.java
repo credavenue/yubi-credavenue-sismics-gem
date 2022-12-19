@@ -108,4 +108,9 @@ public class Constants {
      */
     public static final String JWT_SECRET_KEY = "JWT_SECRET_KEY";
     public static final String JWT_TTL_IN_SECONDS = "JWT_TTL_IN_SECONDS";
+
+    /**
+     * Restriction flags
+     */
+    public static final String ALLOW_PROP_DEFINED_DB = "ALLOW_PROP_DEFINED_DB";
 }

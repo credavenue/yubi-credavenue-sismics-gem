@@ -11,7 +11,7 @@ import com.sismics.docs.core.event.RebuildIndexAsyncEvent;
 import com.sismics.docs.core.model.context.AppContext;
 import com.sismics.docs.core.model.jpa.Config;
 import com.sismics.docs.core.model.jpa.File;
-import com.sismics.docs.core.service.InboxService;
+// import com.sismics.docs.core.service.InboxService;
 import com.sismics.docs.core.util.ConfigUtil;
 import com.sismics.docs.core.util.DirectoryUtil;
 import com.sismics.docs.core.util.authentication.LdapAuthenticationHandler;
@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
+import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -48,7 +49,7 @@ import java.util.*;
 
 /**
  * General app REST resource.
- * 
+ *
  * @author jtremeaux
  */
 @Path("/app")
@@ -57,10 +58,11 @@ public class AppResource extends BaseResource {
      * Logger.
      */
     private static final Logger log = LoggerFactory.getLogger(AppResource.class);
-    
+
     /**
      * Returns informations about the application.
      *
+     * @return Response
      * @api {get} /app Get application informations
      * @apiName GetApp
      * @apiGroup App
@@ -77,8 +79,6 @@ public class AppResource extends BaseResource {
      * @apiSuccess {String} global_storage_quota Maximum global storage (in bytes)
      * @apiPermission none
      * @apiVersion 1.5.0
-     *
-     * @return Response
      */
     @GET
     public Response info() {
@@ -116,6 +116,8 @@ public class AppResource extends BaseResource {
     /**
      * Enable/disable guest login.
      *
+     * @param enabled If true, enable guest login
+     * @return Response
      * @api {post} /app/guest_login Enable/disable guest login
      * @apiName PostAppGuestLogin
      * @apiGroup App
@@ -123,9 +125,6 @@ public class AppResource extends BaseResource {
      * @apiError (client) ForbiddenError Access denied
      * @apiPermission admin
      * @apiVersion 1.5.0
-     *
-     * @param enabled If true, enable guest login
-     * @return Response
      */
     @POST
     @Path("guest_login")
@@ -144,6 +143,8 @@ public class AppResource extends BaseResource {
     /**
      * General application configuration.
      *
+     * @param defaultLanguage Default language
+     * @return Response
      * @api {post} /app/config General application configuration
      * @apiName PostAppConfig
      * @apiGroup App
@@ -151,9 +152,6 @@ public class AppResource extends BaseResource {
      * @apiError (client) ForbiddenError Access denied
      * @apiPermission admin
      * @apiVersion 1.5.0
-     *
-     * @param defaultLanguage Default language
-     * @return Response
      */
     @POST
     @Path("config")
@@ -176,6 +174,7 @@ public class AppResource extends BaseResource {
     /**
      * Get the SMTP server configuration.
      *
+     * @return Response
      * @api {get} /app/config_smtp Get the SMTP server configuration
      * @apiName GetAppConfigSmtp
      * @apiGroup App
@@ -187,8 +186,6 @@ public class AppResource extends BaseResource {
      * @apiError (client) ForbiddenError Access denied
      * @apiPermission admin
      * @apiVersion 1.5.0
-     *
-     * @return Response
      */
     @GET
     @Path("config_smtp")
@@ -241,10 +238,16 @@ public class AppResource extends BaseResource {
 
         return Response.ok().entity(response.build()).build();
     }
-    
+
     /**
      * Configure the SMTP server.
      *
+     * @param hostname SMTP hostname
+     * @param portStr  SMTP port
+     * @param username SMTP username
+     * @param password SMTP password
+     * @param from     From address
+     * @return Response
      * @api {post} /app/config_smtp Configure the SMTP server
      * @apiName PostAppConfigSmtp
      * @apiGroup App
@@ -257,13 +260,6 @@ public class AppResource extends BaseResource {
      * @apiError (client) ValidationError Validation error
      * @apiPermission admin
      * @apiVersion 1.5.0
-     *
-     * @param hostname SMTP hostname
-     * @param portStr SMTP port
-     * @param username SMTP username
-     * @param password SMTP password
-     * @param from From address
-     * @return Response
      */
     @POST
     @Path("config_smtp")
@@ -304,6 +300,7 @@ public class AppResource extends BaseResource {
     /**
      * Get the inbox configuration.
      *
+     * @return Response
      * @api {get} /app/config_inbox Get the inbox scanning configuration
      * @apiName GetAppConfigInbox
      * @apiGroup App
@@ -317,8 +314,6 @@ public class AppResource extends BaseResource {
      * @apiError (client) ForbiddenError Access denied
      * @apiPermission admin
      * @apiVersion 1.5.0
-     *
-     * @return Response
      */
     @GET
     @Path("config_inbox")
@@ -375,16 +370,20 @@ public class AppResource extends BaseResource {
         }
 
         // Informations about the last synchronization
-        InboxService inboxService = AppContext.getInstance().getInboxService();
-        JsonObjectBuilder lastSync = Json.createObjectBuilder();
-        if (inboxService.getLastSyncDate() == null) {
-            lastSync.addNull("date");
-        } else {
-            lastSync.add("date", inboxService.getLastSyncDate().getTime());
-        }
-        lastSync.add("error", JsonUtil.nullable(inboxService.getLastSyncError()));
-        lastSync.add("count", inboxService.getLastSyncMessageCount());
-        response.add("last_sync", lastSync);
+
+        /**
+         * .
+         InboxService inboxService = AppContext.getInstance().getInboxService();
+         JsonObjectBuilder lastSync = Json.createObjectBuilder();
+         if (inboxService.getLastSyncDate() == null) {
+         lastSync.addNull("date");
+         } else {
+         lastSync.add("date", inboxService.getLastSyncDate().getTime());
+         }
+         lastSync.add("error", JsonUtil.nullable(inboxService.getLastSyncError()));
+         lastSync.add("count", inboxService.getLastSyncMessageCount());
+         response.add("last_sync", lastSync);
+         */
 
         return Response.ok().entity(response.build()).build();
     }
@@ -392,6 +391,14 @@ public class AppResource extends BaseResource {
     /**
      * Configure the inbox.
      *
+     * @param enabled  True if the inbox scanning is enabled
+     * @param hostname IMAP hostname
+     * @param portStr  IMAP port
+     * @param username IMAP username
+     * @param password IMAP password
+     * @param folder   IMAP folder
+     * @param tag      Tag for created documents
+     * @return Response
      * @api {post} /app/config_inbox Configure the inbox scanning
      * @apiName PostAppConfigInbox
      * @apiGroup App
@@ -406,15 +413,6 @@ public class AppResource extends BaseResource {
      * @apiError (client) ValidationError Validation error
      * @apiPermission admin
      * @apiVersion 1.5.0
-     *
-     * @param enabled True if the inbox scanning is enabled
-     * @param hostname IMAP hostname
-     * @param portStr IMAP port
-     * @param username IMAP username
-     * @param password IMAP password
-     * @param folder IMAP folder
-     * @param tag Tag for created documents
-     * @return Response
      */
     @POST
     @Path("config_inbox")
@@ -466,6 +464,7 @@ public class AppResource extends BaseResource {
     /**
      * Test the inbox.
      *
+     * @return Response
      * @api {post} /app/test_inbox Test the inbox scanning
      * @apiName PostAppTestInbox
      * @apiGroup App
@@ -473,8 +472,6 @@ public class AppResource extends BaseResource {
      * @apiError (client) ForbiddenError Access denied
      * @apiPermission admin
      * @apiVersion 1.5.0
-     *
-     * @return Response
      */
     @POST
     @Path("test_inbox")
@@ -482,16 +479,25 @@ public class AppResource extends BaseResource {
         if (!authenticate()) {
             throw new ForbiddenClientException();
         }
-        checkBaseFunction(BaseFunction.ADMIN);
-
         return Response.ok().entity(Json.createObjectBuilder()
-                .add("count", AppContext.getInstance().getInboxService().testInbox())
+                .add("count", 0)
                 .build()).build();
+
+        // checkBaseFunction(BaseFunction.ADMIN);
+        // return Response.ok().entity(Json.createObjectBuilder()
+        //      .add("count", AppContext.getInstance().getInboxService().testInbox())
+        //      .build()).build();
     }
 
     /**
      * Retrieve the application logs.
      *
+     * @param minLevel Filter on logging level
+     * @param tag      Filter on logger name / tag
+     * @param message  Filter on message
+     * @param limit    Page limit
+     * @param offset   Page offset
+     * @return Response
      * @api {get} /app/log Get application logs
      * @apiName GetAppLog
      * @apiGroup App
@@ -510,13 +516,6 @@ public class AppResource extends BaseResource {
      * @apiError (server) ServerError MEMORY appender not configured
      * @apiPermission user
      * @apiVersion 1.5.0
-     *
-     * @param minLevel Filter on logging level
-     * @param tag Filter on logger name / tag
-     * @param message Filter on message
-     * @param limit Page limit
-     * @param offset Page offset
-     * @return Response
      */
     @GET
     @Path("log")
@@ -537,13 +536,13 @@ public class AppResource extends BaseResource {
             throw new ServerException("ServerError", "MEMORY appender not configured");
         }
         MemoryAppender memoryAppender = (MemoryAppender) appender;
-        
+
         // Find the logs
         LogCriteria logCriteria = new LogCriteria()
                 .setMinLevel(Level.toLevel(StringUtils.stripToNull(minLevel)))
                 .setTag(StringUtils.stripToNull(tag))
                 .setMessage(StringUtils.stripToNull(message));
-        
+
         PaginatedList<LogEntry> paginatedList = PaginatedLists.create(limit, offset);
         memoryAppender.find(logCriteria, paginatedList);
         JsonArrayBuilder logs = Json.createArrayBuilder();
@@ -554,17 +553,18 @@ public class AppResource extends BaseResource {
                     .add("tag", logEntry.getTag())
                     .add("message", logEntry.getMessage()));
         }
-        
+
         JsonObjectBuilder response = Json.createObjectBuilder()
                 .add("total", paginatedList.getResultCount())
                 .add("logs", logs);
-        
+
         return Response.ok().entity(response.build()).build();
     }
-    
+
     /**
      * Destroy and rebuild the search index.
      *
+     * @return Response
      * @api {post} /app/batch/reindex Rebuild the search index
      * @apiName PostAppBatchReindex
      * @apiGroup App
@@ -573,8 +573,6 @@ public class AppResource extends BaseResource {
      * @apiError (server) IndexingError Error rebuilding the index
      * @apiPermission admin
      * @apiVersion 1.5.0
-     *
-     * @return Response
      */
     @POST
     @Path("batch/reindex")
@@ -583,7 +581,7 @@ public class AppResource extends BaseResource {
             throw new ForbiddenClientException();
         }
         checkBaseFunction(BaseFunction.ADMIN);
-        
+
         RebuildIndexAsyncEvent rebuildIndexAsyncEvent = new RebuildIndexAsyncEvent();
         ThreadLocalContext.get().addAsyncEvent(rebuildIndexAsyncEvent);
 
@@ -592,10 +590,11 @@ public class AppResource extends BaseResource {
                 .add("status", "ok");
         return Response.ok().entity(response.build()).build();
     }
-    
+
     /**
      * Clean storage.
      *
+     * @return Response
      * @api {post} /app/batch/clean_storage Clean the file and DB storage
      * @apiName PostAppBatchCleanStorage
      * @apiGroup App
@@ -604,8 +603,6 @@ public class AppResource extends BaseResource {
      * @apiError (server) FileError Error deleting orphan files
      * @apiPermission admin
      * @apiVersion 1.5.0
-     *
-     * @return Response
      */
     @POST
     @Path("batch/clean_storage")
@@ -614,7 +611,7 @@ public class AppResource extends BaseResource {
             throw new ForbiddenClientException();
         }
         checkBaseFunction(BaseFunction.ADMIN);
-        
+
         // Get all files
         FileDao fileDao = new FileDao();
         List<File> fileList = fileDao.findAll(0, Integer.MAX_VALUE);
@@ -623,7 +620,7 @@ public class AppResource extends BaseResource {
             fileMap.put(file.getId(), file);
         }
         log.info("Checking {} files", fileMap.size());
-        
+
         // Check if each stored file is valid
         try (DirectoryStream<java.nio.file.Path> storedFileList = Files.newDirectoryStream(DirectoryUtil.getStorageDirectory())) {
             for (java.nio.file.Path storedFile : storedFileList) {
@@ -637,7 +634,7 @@ public class AppResource extends BaseResource {
         } catch (IOException e) {
             throw new ServerException("FileError", "Error deleting orphan files", e);
         }
-        
+
         // Hard delete orphan audit logs
         EntityManager em = ThreadLocalContext.get().getEntityManager();
         StringBuilder sb = new StringBuilder("delete from T_AUDIT_LOG al where al.LOG_ID_C in (select al.LOG_ID_C from T_AUDIT_LOG al ");
@@ -651,7 +648,7 @@ public class AppResource extends BaseResource {
         sb.append(" where d.DOC_ID_C is null and a.ACL_ID_C is null and c.COM_ID_C is null and f.FIL_ID_C is null and t.TAG_ID_C is null and u.USE_ID_C is null and g.GRP_ID_C is null)");
         Query q = em.createNativeQuery(sb.toString());
         log.info("Deleting {} orphan audit logs", q.executeUpdate());
-        
+
         // Soft delete orphan ACLs
         sb = new StringBuilder("update T_ACL a set ACL_DELETEDATE_D = :dateNow where a.ACL_ID_C in (select a.ACL_ID_C from T_ACL a ");
         sb.append(" left join T_SHARE s on s.SHA_ID_C = a.ACL_TARGETID_C ");
@@ -663,37 +660,37 @@ public class AppResource extends BaseResource {
         q = em.createNativeQuery(sb.toString());
         q.setParameter("dateNow", new Date());
         log.info("Deleting {} orphan ACLs", q.executeUpdate());
-        
+
         // Soft delete orphan comments
         q = em.createNativeQuery("update T_COMMENT c set c.COM_DELETEDATE_D = :dateNow where c.COM_ID_C in (select c.COM_ID_C from T_COMMENT c left join T_DOCUMENT d on d.DOC_ID_C = c.COM_IDDOC_C and d.DOC_DELETEDATE_D is null where d.DOC_ID_C is null)");
         q.setParameter("dateNow", new Date());
         log.info("Deleting {} orphan comments", q.executeUpdate());
-        
+
         // Soft delete orphan document tag links
         q = em.createNativeQuery("update T_DOCUMENT_TAG dt set dt.DOT_DELETEDATE_D = :dateNow where dt.DOT_ID_C in (select dt.DOT_ID_C from T_DOCUMENT_TAG dt left join T_DOCUMENT d on dt.DOT_IDDOCUMENT_C = d.DOC_ID_C and d.DOC_DELETEDATE_D is null left join T_TAG t on t.TAG_ID_C = dt.DOT_IDTAG_C and t.TAG_DELETEDATE_D is null where d.DOC_ID_C is null or t.TAG_ID_C is null)");
         q.setParameter("dateNow", new Date());
         log.info("Deleting {} orphan document tag links", q.executeUpdate());
-        
+
         // Soft delete orphan shares
         q = em.createNativeQuery("update T_SHARE s set s.SHA_DELETEDATE_D = :dateNow where s.SHA_ID_C in (select s.SHA_ID_C from T_SHARE s left join T_ACL a on a.ACL_TARGETID_C = s.SHA_ID_C and a.ACL_DELETEDATE_D is null where a.ACL_ID_C is null)");
         q.setParameter("dateNow", new Date());
         log.info("Deleting {} orphan shares", q.executeUpdate());
-        
+
         // Soft delete orphan tags
         q = em.createNativeQuery("update T_TAG t set t.TAG_DELETEDATE_D = :dateNow where t.TAG_ID_C in (select t.TAG_ID_C from T_TAG t left join T_USER u on u.USE_ID_C = t.TAG_IDUSER_C and u.USE_DELETEDATE_D is null where u.USE_ID_C is null)");
         q.setParameter("dateNow", new Date());
         log.info("Deleting {} orphan tags", q.executeUpdate());
-        
+
         // Soft delete orphan documents
         q = em.createNativeQuery("update T_DOCUMENT d set d.DOC_DELETEDATE_D = :dateNow where d.DOC_ID_C in (select d.DOC_ID_C from T_DOCUMENT d left join T_USER u on u.USE_ID_C = d.DOC_IDUSER_C and u.USE_DELETEDATE_D is null where u.USE_ID_C is null)");
         q.setParameter("dateNow", new Date());
         log.info("Deleting {} orphan documents", q.executeUpdate());
-        
+
         // Soft delete orphan files
         q = em.createNativeQuery("update T_FILE f set f.FIL_DELETEDATE_D = :dateNow where f.FIL_ID_C in (select f.FIL_ID_C from T_FILE f left join T_USER u on u.USE_ID_C = f.FIL_IDUSER_C and u.USE_DELETEDATE_D is null where u.USE_ID_C is null)");
         q.setParameter("dateNow", new Date());
         log.info("Deleting {} orphan files", q.executeUpdate());
-        
+
         // Hard delete softly deleted data
         log.info("Deleting {} soft deleted document tag links", em.createQuery("delete DocumentTag dt where dt.deleteDate is not null").executeUpdate());
         log.info("Deleting {} soft deleted ACLs", em.createQuery("delete Acl a where a.deleteDate is not null").executeUpdate());
@@ -704,7 +701,7 @@ public class AppResource extends BaseResource {
         log.info("Deleting {} soft deleted documents", em.createQuery("delete Document d where d.deleteDate is not null").executeUpdate());
         log.info("Deleting {} soft deleted users", em.createQuery("delete User u where u.deleteDate is not null").executeUpdate());
         log.info("Deleting {} soft deleted groups", em.createQuery("delete Group g where g.deleteDate is not null").executeUpdate());
-        
+
         // Always return OK
         JsonObjectBuilder response = Json.createObjectBuilder()
                 .add("status", "ok");
@@ -714,6 +711,7 @@ public class AppResource extends BaseResource {
     /**
      * Get the LDAP authentication configuration.
      *
+     * @return Response
      * @api {get} /app/config_ldap Get the LDAP authentication configuration
      * @apiName GetAppConfigLdap
      * @apiGroup App
@@ -729,8 +727,6 @@ public class AppResource extends BaseResource {
      * @apiError (client) ForbiddenError Access denied
      * @apiPermission admin
      * @apiVersion 1.9.0
-     *
-     * @return Response
      */
     @GET
     @Path("config_ldap")
@@ -766,6 +762,16 @@ public class AppResource extends BaseResource {
     /**
      * Configure the LDAP authentication.
      *
+     * @param enabled           LDAP authentication enabled
+     * @param host              LDAP server host
+     * @param portStr           LDAP server port
+     * @param adminDn           Admin DN
+     * @param adminPassword     Admin password
+     * @param baseDn            Base DN
+     * @param filter            LDAP filter
+     * @param defaultEmail      LDAP default email
+     * @param defaultStorageStr LDAP default storage
+     * @return Response
      * @api {post} /app/config_ldap Configure the LDAP authentication
      * @apiName PostAppConfigLdap
      * @apiGroup App
@@ -782,17 +788,6 @@ public class AppResource extends BaseResource {
      * @apiError (client) ValidationError Validation error
      * @apiPermission admin
      * @apiVersion 1.9.0
-     *
-     * @param enabled LDAP authentication enabled
-     * @param host LDAP server host
-     * @param portStr LDAP server port
-     * @param adminDn Admin DN
-     * @param adminPassword Admin password
-     * @param baseDn Base DN
-     * @param filter LDAP filter
-     * @param defaultEmail LDAP default email
-     * @param defaultStorageStr LDAP default storage
-     * @return Response
      */
     @POST
     @Path("config_ldap")
@@ -843,5 +838,23 @@ public class AppResource extends BaseResource {
         LdapAuthenticationHandler.reset();
 
         return Response.ok().build();
+    }
+
+
+    /**
+     * Returns health of the system.
+     *
+     * @return Response
+     * @api {get} /health
+     * @apiName GetHealth
+     * @apiGroup App
+     * @apiSuccess {JSON}: {status:up}
+     */
+    @GET
+    @Path("health")
+    public Response health() {
+        JsonObjectBuilder response = Json.createObjectBuilder()
+                .add("status", "up");
+        return Response.ok().entity(response.build()).build();
     }
 }

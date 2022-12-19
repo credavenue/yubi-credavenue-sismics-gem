@@ -293,7 +293,7 @@ public class TestAppResource extends BaseJerseyTest {
         GreenMailUtil.sendTextEmail("test@sismics.com", "test@sismicsdocs.com", "Test email 1", "Test content 1", serverSetupSmtp);
 
         // Trigger an inbox sync
-        AppContext.getInstance().getInboxService().syncInbox();
+        // AppContext.getInstance().getInboxService().syncInbox();
 
         // Search for added documents
         json = target().path("/document/list")
@@ -313,7 +313,7 @@ public class TestAppResource extends BaseJerseyTest {
         Assert.assertEquals(1, lastSync.getJsonNumber("count").intValue());
 
         // Trigger an inbox sync
-        AppContext.getInstance().getInboxService().syncInbox();
+        // AppContext.getInstance().getInboxService().syncInbox();
 
         // Search for added documents
         json = target().path("/document/list")

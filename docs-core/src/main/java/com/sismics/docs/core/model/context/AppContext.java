@@ -8,7 +8,7 @@ import com.sismics.docs.core.dao.UserDao;
 import com.sismics.docs.core.listener.async.*;
 import com.sismics.docs.core.model.jpa.User;
 import com.sismics.docs.core.service.FileService;
-import com.sismics.docs.core.service.InboxService;
+// import com.sismics.docs.core.service.InboxService;
 import com.sismics.docs.core.util.PdfUtil;
 import com.sismics.docs.core.util.indexing.IndexingHandler;
 import com.sismics.util.ClasspathScanner;
@@ -47,7 +47,7 @@ public class AppContext {
     /**
      * Asynchronous bus for email sending.
      */
-    private EventBus mailEventBus;
+    // private EventBus mailEventBus;
 
     /**
      * Indexing handler.
@@ -57,7 +57,7 @@ public class AppContext {
     /**
      * Inbox scanning service.
      */
-    private InboxService inboxService;
+    // private InboxService inboxService;
 
     /**
      * File service.
@@ -97,9 +97,9 @@ public class AppContext {
         fileService.awaitRunning();
 
         // Start inbox service
-        inboxService = new InboxService();
-        inboxService.startAsync();
-        inboxService.awaitRunning();
+        // inboxService = new InboxService();
+        // inboxService.startAsync();
+        // inboxService.awaitRunning();
 
         // Register fonts
         PdfUtil.registerFonts();
@@ -144,9 +144,9 @@ public class AppContext {
         asyncEventBus.register(new AclDeletedAsyncListener());
         asyncEventBus.register(new WebhookAsyncListener());
 
-        mailEventBus = newAsyncEventBus();
-        mailEventBus.register(new PasswordLostAsyncListener());
-        mailEventBus.register(new RouteStepValidateAsyncListener());
+        // mailEventBus = newAsyncEventBus();
+        // mailEventBus.register(new PasswordLostAsyncListener());
+        // mailEventBus.register(new RouteStepValidateAsyncListener());
     }
 
     /**
@@ -197,17 +197,17 @@ public class AppContext {
         return asyncEventBus;
     }
 
-    public EventBus getMailEventBus() {
-        return mailEventBus;
-    }
+    // public EventBus getMailEventBus() {
+    //     return mailEventBus;
+    // }
 
     public IndexingHandler getIndexingHandler() {
         return indexingHandler;
     }
 
-    public InboxService getInboxService() {
-        return inboxService;
-    }
+    // public InboxService getInboxService() {
+    //     return inboxService;
+    // }
 
     public FileService getFileService() {
         return fileService;
@@ -228,10 +228,10 @@ public class AppContext {
             indexingHandler.shutDown();
         }
 
-        if (inboxService != null) {
-            inboxService.stopAsync();
-            inboxService.awaitTerminated();
-        }
+        // if (inboxService != null) {
+        //     inboxService.stopAsync();
+        //     inboxService.awaitTerminated();
+        // }
 
         if (fileService != null) {
             fileService.stopAsync();

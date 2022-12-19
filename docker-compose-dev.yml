@@ -23,12 +23,9 @@ services:
     restart: unless-stopped
     container_name: teedy_service
     environment:
-      DOCS_BASE_URL: https://docs.example.com
-      DATABASE_URL: teedy_dms_db
+      DATABASE_URL: jdbc:postgresql://db:5432/teedy_dms_db
       DATABASE_USER: dev
       DATABASE_PASSWORD: dev@123
-      DOCS_ADMIN_EMAIL_INIT: ENTER_AN_EMAIL
-      DOCS_ADMIN_PASSWORD_INIT: $2a$12$.E8kopCeL5xhgQwomLh.leCRwHabt4YR06tPS/xo1BRcxZ9lUIO5i
       JWT_SECRET_KEY: nsK0ZekLdM7pnAVe7hoQw8_mAUm4TIbA-oSReF0rKXPImvQE
       JWT_TTL_IN_SECONDS: 500
     ports:
