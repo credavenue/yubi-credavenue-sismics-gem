@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Listener on file processing.
- * 
+ *
  * @author bgamard
  */
 public class FileProcessingAsyncListener {
@@ -74,7 +74,7 @@ public class FileProcessingAsyncListener {
      * Generate thumbnails
      * Extract and save text content
      *
-     * @param event File event
+     * @param event         File event
      * @param isFileCreated True if the file was just created
      */
     private void processFile(FileEvent event, boolean isFileCreated) {
@@ -132,8 +132,8 @@ public class FileProcessingAsyncListener {
      * This is executed outside of a transaction.
      *
      * @param event File event
-     * @param user User whom created the file
-     * @param file Fresh file
+     * @param user  User whom created the file
+     * @param file  Fresh file
      * @return Text content
      */
     private String extractContent(FileEvent event, User user, File file) {
@@ -170,17 +170,21 @@ public class FileProcessingAsyncListener {
             log.error("Unable to generate thumbnails for: " + file, e);
         }
 
-        // Extract text content from the file
-        long startTime = System.currentTimeMillis();
-        String content = null;
-        log.info("Start extracting content from: " + file);
-        try {
-            content = formatHandler.extractContent(event.getLanguage(), event.getUnencryptedFile());
-        } catch (Throwable e) {
-            log.error("Error extracting content from: " + file, e);
-        }
-        log.info(MessageFormat.format("File content extracted in {0}ms: " + file.getId(), System.currentTimeMillis() - startTime));
+        /**
+         // Extract text content from the file
+         long startTime = System.currentTimeMillis();
+         String content = null;
+         log.info("Start extracting content from: " + file);
+         try {
+         content = formatHandler.extractContent(event.getLanguage(), event.getUnencryptedFile());
+         } catch (Throwable e) {
+         log.error("Error extracting content from: " + file, e);
+         }
+         log.info(MessageFormat.format("File content extracted in {0}ms: " + file.getId(), System.currentTimeMillis() - startTime));
 
-        return content;
+         return content;
+         */
+
+        return null;
     }
 }
