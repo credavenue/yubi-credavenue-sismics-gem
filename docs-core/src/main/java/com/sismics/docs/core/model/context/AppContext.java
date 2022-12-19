@@ -47,7 +47,7 @@ public class AppContext {
     /**
      * Asynchronous bus for email sending.
      */
-    private EventBus mailEventBus;
+    // private EventBus mailEventBus;
 
     /**
      * Indexing handler.
@@ -144,9 +144,9 @@ public class AppContext {
         asyncEventBus.register(new AclDeletedAsyncListener());
         asyncEventBus.register(new WebhookAsyncListener());
 
-        mailEventBus = newAsyncEventBus();
-        mailEventBus.register(new PasswordLostAsyncListener());
-        mailEventBus.register(new RouteStepValidateAsyncListener());
+        // mailEventBus = newAsyncEventBus();
+        // mailEventBus.register(new PasswordLostAsyncListener());
+        // mailEventBus.register(new RouteStepValidateAsyncListener());
     }
 
     /**
@@ -197,9 +197,9 @@ public class AppContext {
         return asyncEventBus;
     }
 
-    public EventBus getMailEventBus() {
-        return mailEventBus;
-    }
+    // public EventBus getMailEventBus() {
+    //     return mailEventBus;
+    // }
 
     public IndexingHandler getIndexingHandler() {
         return indexingHandler;

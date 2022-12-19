@@ -91,7 +91,7 @@ public class RoutingUtil {
             RouteStepValidateEvent routeStepValidateEvent = new RouteStepValidateEvent();
             routeStepValidateEvent.setUser(userDto);
             routeStepValidateEvent.setDocument(document);
-            AppContext.getInstance().getMailEventBus().post(routeStepValidateEvent);
+            // AppContext.getInstance().getMailEventBus().post(routeStepValidateEvent);
         }
     }
 

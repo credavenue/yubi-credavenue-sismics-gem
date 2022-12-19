@@ -1116,7 +1116,7 @@ public class UserResource extends BaseResource {
         PasswordLostEvent passwordLostEvent = new PasswordLostEvent();
         passwordLostEvent.setUser(user);
         passwordLostEvent.setPasswordRecovery(passwordRecovery);
-        AppContext.getInstance().getMailEventBus().post(passwordLostEvent);
+        // AppContext.getInstance().getMailEventBus().post(passwordLostEvent);
 
         // Always return OK
         JsonObjectBuilder response = Json.createObjectBuilder()
