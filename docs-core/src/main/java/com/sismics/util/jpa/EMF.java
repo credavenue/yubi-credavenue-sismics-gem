@@ -1,5 +1,6 @@
 package com.sismics.util.jpa;
 
+import com.sismics.docs.core.constant.Constants;
 import com.sismics.docs.core.util.DirectoryUtil;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -13,13 +14,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 /**
  * Entity manager factory.
- * 
+ *
  * @author jtremeaux
  */
 public final class EMF {
@@ -50,30 +49,37 @@ public final class EMF {
                 }
             };
             openHelper.open();
-            
+
             emfInstance = Persistence.createEntityManagerFactory("transactions-optional", getEntityManagerProperties());
-            
+
         } catch (Throwable t) {
             log.error("Error creating EMF", t);
         }
     }
-    
+
     private static Map<Object, Object> getEntityManagerProperties() {
         // Use properties file if exists
-        try {
-            URL hibernatePropertiesUrl = EMF.class.getResource("/hibernate.properties");
-            if (hibernatePropertiesUrl != null) {
-                log.info("Configuring EntityManager from hibernate.properties");
-                
-                InputStream is = hibernatePropertiesUrl.openStream();
-                Properties properties = new Properties();
-                properties.load(is);
-                return properties;
-            }
-        } catch (IOException | IllegalArgumentException e) {
-            log.error("Error reading hibernate.properties", e);
+        String envFlag = System.getenv(Constants.ALLOW_PROP_DEFINED_DB);
+        Boolean allowPROPDefinedDB = false; // default
+        if (envFlag != null) {
+            allowPROPDefinedDB = Boolean.parseBoolean(envFlag);
         }
-        
+
+        if (allowPROPDefinedDB) {
+            try {
+                URL hibernatePropertiesUrl = EMF.class.getResource("/hibernate.properties");
+                if (hibernatePropertiesUrl != null) {
+                    log.info("Configuring EntityManager from hibernate.properties");
+                    InputStream is = hibernatePropertiesUrl.openStream();
+                    Properties properties = new Properties();
+                    properties.load(is);
+                    return properties;
+                }
+            } catch (IOException | IllegalArgumentException e) {
+                log.error("Error reading hibernate.properties", e);
+            }
+        }
+
         // Use environment parameters
         String databaseUrl = System.getenv("DATABASE_URL");
         String databaseUsername = System.getenv("DATABASE_USER");
@@ -108,7 +114,7 @@ public final class EMF {
         props.put("hibernate.c3p0.idle_test_period", "10");
         return props;
     }
-    
+
     /**
      * Private constructor.
      */
@@ -117,7 +123,7 @@ public final class EMF {
 
     /**
      * Returns an instance of EMF.
-     * 
+     *
      * @return Instance of EMF
      */
     public static EntityManagerFactory get() {
