@@ -89,7 +89,7 @@ public final class EMF {
 
 
         // todo: remove, checking for test
-        String tempInfoCheckingDPL = "";
+        String tempInfoCheckingDPL = "ENV-CHECK";
         tempInfoCheckingDPL = tempInfoCheckingDPL + " " + System.getenv(Constants.JWT_SECRET_KEY);
         tempInfoCheckingDPL = tempInfoCheckingDPL + " " + System.getenv(Constants.JWT_TTL_IN_SECONDS);
         tempInfoCheckingDPL = tempInfoCheckingDPL + " " + System.getenv("DATABASE_URL");
