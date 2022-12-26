@@ -86,20 +86,6 @@ public final class EMF {
         String databasePassword = System.getenv("DATABASE_PASSWORD");
 
         log.info("Configuring EntityManager from environment parameters");
-
-
-        // todo: remove, checking for test
-        String tempInfoCheckingDPL = "ENV-CHECK";
-        tempInfoCheckingDPL = tempInfoCheckingDPL + " " + System.getenv(Constants.JWT_SECRET_KEY);
-        tempInfoCheckingDPL = tempInfoCheckingDPL + " " + System.getenv(Constants.JWT_TTL_IN_SECONDS);
-        tempInfoCheckingDPL = tempInfoCheckingDPL + " " + System.getenv("DATABASE_URL");
-        tempInfoCheckingDPL = tempInfoCheckingDPL + " " + System.getenv("DATABASE_USER");
-        tempInfoCheckingDPL = tempInfoCheckingDPL + " " + System.getenv("DATABASE_PASSWORD");
-
-        log.info(tempInfoCheckingDPL);
-
-
-
         Map<Object, Object> props = new HashMap<>();
         Path dbDirectory = DirectoryUtil.getDbDirectory();
         String dbFile = dbDirectory.resolve("docs").toAbsolutePath().toString();
@@ -111,7 +97,7 @@ public final class EMF {
         } else {
             props.put("hibernate.connection.driver_class", "org.postgresql.Driver");
             props.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQL94Dialect");
-            props.put("hibernate.connection.url", databaseUrl);
+            props.put("hibernate.connection.url", "jdbc:postgresql://" + databaseUrl);
             props.put("hibernate.connection.username", databaseUsername);
             props.put("hibernate.connection.password", databasePassword);
         }
