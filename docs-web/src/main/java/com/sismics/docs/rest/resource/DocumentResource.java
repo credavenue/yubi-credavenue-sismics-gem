@@ -27,6 +27,7 @@ import com.sismics.rest.exception.ClientException;
 import com.sismics.rest.exception.ForbiddenClientException;
 import com.sismics.rest.exception.ServerException;
 import com.sismics.rest.util.AclUtil;
+import com.sismics.rest.util.RestUtil;
 import com.sismics.rest.util.ValidationUtil;
 import com.sismics.util.EmailUtil;
 import com.sismics.util.JsonUtil;
@@ -60,7 +61,7 @@ import java.util.*;
 
 /**
  * Document REST resources.
- * 
+ *
  * @author bgamard
  */
 @Path("/document")
@@ -68,6 +69,9 @@ public class DocumentResource extends BaseResource {
     /**
      * Returns a document.
      *
+     * @param documentId Document ID
+     * @param shareId    Share ID
+     * @return Response
      * @api {get} /document/:id Get a document
      * @apiName GetDocument
      * @apiGroup Document
@@ -122,24 +126,21 @@ public class DocumentResource extends BaseResource {
      * @apiError (client) NotFound Document not found
      * @apiPermission none
      * @apiVersion 1.5.0
-     *
-     * @param documentId Document ID
-     * @param shareId Share ID
-     * @return Response
      */
     @GET
     @Path("{id: [a-z0-9\\-]+}")
     public Response get(
             @PathParam("id") String documentId,
-            @QueryParam("share") String shareId) {
+            @QueryParam("share") String shareId,
+            @QueryParam("files") Boolean files) {
         authenticate();
-        
+
         DocumentDao documentDao = new DocumentDao();
         DocumentDto documentDto = documentDao.getDocument(documentId, PermType.READ, getTargetIdList(shareId));
         if (documentDto == null) {
             throw new NotFoundException();
         }
-            
+
         JsonObjectBuilder document = Json.createObjectBuilder()
                 .add("id", documentDto.getId())
                 .add("title", documentDto.getTitle())
@@ -171,7 +172,7 @@ public class DocumentResource extends BaseResource {
             }
             document.add("tags", tags);
         }
-        
+
         // Below is specific to GET /document/id
         document.add("subject", JsonUtil.nullable(documentDto.getSubject()));
         document.add("identifier", JsonUtil.nullable(documentDto.getIdentifier()));
@@ -205,7 +206,7 @@ public class DocumentResource extends BaseResource {
             }
             document.add("inherited_acls", aclList);
         }
-        
+
         // Add contributors
         ContributorDao contributorDao = new ContributorDao();
         List<ContributorDto> contributorDtoList = contributorDao.getByDocumentId(documentId);
@@ -216,7 +217,7 @@ public class DocumentResource extends BaseResource {
                     .add("email", contributorDto.getEmail()));
         }
         document.add("contributors", contributorList);
-        
+
         // Add relations
         RelationDao relationDao = new RelationDao();
         List<RelationDto> relationDtoList = relationDao.getByDocumentId(documentId);
@@ -240,12 +241,32 @@ public class DocumentResource extends BaseResource {
         // Add custom metadata
         MetadataUtil.addMetadata(document, documentId);
 
+        // Add files
+        if (Boolean.TRUE == files) {
+            FileDao fileDao = new FileDao();
+            List<File> fileList = fileDao.getByDocumentsIds(Collections.singleton(documentId));
+
+            JsonArrayBuilder filesArrayBuilder = Json.createArrayBuilder();
+            for (File fileDb : fileList) {
+                filesArrayBuilder.add(RestUtil.fileToJsonObjectBuilder(fileDb));
+            }
+
+            document.add("files", filesArrayBuilder);
+        }
+
         return Response.ok().entity(document.build()).build();
     }
-    
+
     /**
      * Export a document to PDF.
      *
+     * @param documentId     Document ID
+     * @param shareId        Share ID
+     * @param metadata       Export metadata
+     * @param comments       Export comments
+     * @param fitImageToPage Fit images to page
+     * @param marginStr      Margins
+     * @return Response
      * @api {get} /document/:id/pdf Export a document to PDF
      * @apiName GetDocumentPdf
      * @apiGroup Document
@@ -260,14 +281,6 @@ public class DocumentResource extends BaseResource {
      * @apiError (client) ValidationError Validation error
      * @apiPermission none
      * @apiVersion 1.5.0
-     *
-     * @param documentId Document ID
-     * @param shareId Share ID
-     * @param metadata Export metadata
-     * @param comments Export comments
-     * @param fitImageToPage Fit images to page
-     * @param marginStr Margins
-     * @return Response
      */
     @GET
     @Path("{id: [a-z0-9\\-]+}/pdf")
@@ -279,17 +292,17 @@ public class DocumentResource extends BaseResource {
             final @QueryParam("fitimagetopage") Boolean fitImageToPage,
             @QueryParam("margin") String marginStr) {
         authenticate();
-        
+
         // Validate input
         final int margin = ValidationUtil.validateInteger(marginStr, "margin");
-        
+
         // Get document and check read permission
         DocumentDao documentDao = new DocumentDao();
         final DocumentDto documentDto = documentDao.getDocument(documentId, PermType.READ, getTargetIdList(shareId));
         if (documentDto == null) {
             throw new NotFoundException();
         }
-        
+
         // Get files
         FileDao fileDao = new FileDao();
         UserDao userDao = new UserDao();
@@ -300,7 +313,7 @@ public class DocumentResource extends BaseResource {
             User user = userDao.getById(file.getUserId());
             file.setPrivateKey(user.getPrivateKey());
         }
-        
+
         // Convert to PDF
         StreamingOutput stream = outputStream -> {
             try {
@@ -315,10 +328,16 @@ public class DocumentResource extends BaseResource {
                 .header("Content-Disposition", "inline; filename=\"" + documentDto.getTitle() + ".pdf\"")
                 .build();
     }
-    
+
     /**
      * Returns all documents.
      *
+     * @param limit      Page limit
+     * @param offset     Page offset
+     * @param sortColumn Sort column
+     * @param asc        Sorting
+     * @param search     Search query
+     * @return Response
      * @api {get} /document/list Get documents
      * @apiName GetDocumentList
      * @apiGroup Document
@@ -350,13 +369,6 @@ public class DocumentResource extends BaseResource {
      * @apiError (server) SearchError Error searching in documents
      * @apiPermission user
      * @apiVersion 1.5.0
-     *
-     * @param limit Page limit
-     * @param offset Page offset
-     * @param sortColumn Sort column
-     * @param asc Sorting
-     * @param search Search query
-     * @return Response
      */
     @GET
     @Path("list")
@@ -369,10 +381,10 @@ public class DocumentResource extends BaseResource {
         if (!authenticate()) {
             throw new ForbiddenClientException();
         }
-        
+
         JsonObjectBuilder response = Json.createObjectBuilder();
         JsonArrayBuilder documents = Json.createArrayBuilder();
-        
+
         TagDao tagDao = new TagDao();
         PaginatedList<DocumentDto> paginatedList = PaginatedLists.create(limit, offset);
         List<String> suggestionList = Lists.newArrayList();
@@ -397,7 +409,7 @@ public class DocumentResource extends BaseResource {
                         .add("name", tagDto.getName())
                         .add("color", tagDto.getColor()));
             }
-            
+
             documents.add(Json.createObjectBuilder()
                     .add("id", documentDto.getId())
                     .add("highlight", JsonUtil.nullable(documentDto.getHighlight()))
@@ -422,10 +434,10 @@ public class DocumentResource extends BaseResource {
         response.add("total", paginatedList.getResultCount())
                 .add("documents", documents)
                 .add("suggestions", suggestions);
-        
+
         return Response.ok().entity(response.build()).build();
     }
-    
+
     /**
      * Parse a query according to the specified syntax, eg.:
      * tag:assurance tag:other before:2012 after:2011-09 shared:yes lang:fra thing
@@ -445,11 +457,11 @@ public class DocumentResource extends BaseResource {
         DateTimeParser[] parsers = {
                 DateTimeFormat.forPattern("yyyy").getParser(),
                 DateTimeFormat.forPattern("yyyy-MM").getParser(),
-                DateTimeFormat.forPattern("yyyy-MM-dd").getParser() };
+                DateTimeFormat.forPattern("yyyy-MM-dd").getParser()};
         DateTimeFormatter yearFormatter = new DateTimeFormatter(null, parsers[0]);
         DateTimeFormatter monthFormatter = new DateTimeFormatter(null, parsers[1]);
         DateTimeFormatter dayFormatter = new DateTimeFormatter(null, parsers[2]);
-        DateTimeFormatter formatter = new DateTimeFormatterBuilder().append( null, parsers ).toFormatter();
+        DateTimeFormatter formatter = new DateTimeFormatterBuilder().append(null, parsers).toFormatter();
 
         String[] criteriaList = search.split("  *");
         List<String> query = new ArrayList<>();
@@ -505,7 +517,7 @@ public class DocumentResource extends BaseResource {
                             else documentCriteria.setCreateDateMax(date.toDate());
                         } else {
                             if (isUpdated) documentCriteria.setUpdateDateMin(date.toDate());
-                            else  documentCriteria.setCreateDateMin(date.toDate());
+                            else documentCriteria.setCreateDateMin(date.toDate());
                         }
                     } catch (IllegalArgumentException e) {
                         // Invalid date, returns no documents
@@ -616,6 +628,23 @@ public class DocumentResource extends BaseResource {
     /**
      * Creates a new document.
      *
+     * @param title             Title
+     * @param description       Description
+     * @param subject           Subject
+     * @param identifier        Identifier
+     * @param publisher         Publisher
+     * @param format            Format
+     * @param source            Source
+     * @param type              Type
+     * @param coverage          Coverage
+     * @param rights            Rights
+     * @param tagList           Tags
+     * @param relationList      Relations
+     * @param metadataIdList    Metadata ID list
+     * @param metadataValueList Metadata value list
+     * @param language          Language
+     * @param createDateStr     Creation date
+     * @return Response
      * @api {put} /document Add a document
      * @apiName PutDocument
      * @apiGroup Document
@@ -640,24 +669,6 @@ public class DocumentResource extends BaseResource {
      * @apiError (client) ValidationError Validation error
      * @apiPermission user
      * @apiVersion 1.5.0
-     *
-     * @param title Title
-     * @param description Description
-     * @param subject Subject
-     * @param identifier Identifier
-     * @param publisher Publisher
-     * @param format Format
-     * @param source Source
-     * @param type Type
-     * @param coverage Coverage
-     * @param rights Rights
-     * @param tagList Tags
-     * @param relationList Relations
-     * @param metadataIdList Metadata ID list
-     * @param metadataValueList Metadata value list
-     * @param language Language
-     * @param createDateStr Creation date
-     * @return Response
      */
     @PUT
     public Response add(
@@ -680,7 +691,7 @@ public class DocumentResource extends BaseResource {
         if (!authenticate()) {
             throw new ForbiddenClientException();
         }
-        
+
         // Validate input data
         title = ValidationUtil.validateLength(title, "title", 1, 100, false);
         language = ValidationUtil.validateLength(language, "language", 3, 7, false);
@@ -744,10 +755,13 @@ public class DocumentResource extends BaseResource {
                 .add("id", document.getId());
         return Response.ok().entity(response.build()).build();
     }
-    
+
     /**
      * Updates the document.
      *
+     * @param title       Title
+     * @param description Description
+     * @return Response
      * @api {post} /document/:id Update a document
      * @apiName PostDocument
      * @apiGroup Document
@@ -774,10 +788,6 @@ public class DocumentResource extends BaseResource {
      * @apiError (client) NotFound Document not found
      * @apiPermission user
      * @apiVersion 1.5.0
-     *
-     * @param title Title
-     * @param description Description
-     * @return Response
      */
     @POST
     @Path("{id: [a-z0-9\\-]+}")
@@ -802,7 +812,7 @@ public class DocumentResource extends BaseResource {
         if (!authenticate()) {
             throw new ForbiddenClientException();
         }
-        
+
         // Validate input data
         title = ValidationUtil.validateLength(title, "title", 1, 100, false);
         language = ValidationUtil.validateLength(language, "language", 3, 7, false);
@@ -819,20 +829,20 @@ public class DocumentResource extends BaseResource {
         if (language != null && !Constants.SUPPORTED_LANGUAGES.contains(language)) {
             throw new ClientException("ValidationError", MessageFormat.format("{0} is not a supported language", language));
         }
-        
+
         // Check write permission
         AclDao aclDao = new AclDao();
         if (!aclDao.checkPermission(id, PermType.WRITE, getTargetIdList(null))) {
             throw new ForbiddenClientException();
         }
-        
+
         // Get the document
         DocumentDao documentDao = new DocumentDao();
         Document document = documentDao.getById(id);
         if (document == null) {
             throw new NotFoundException();
         }
-        
+
         // Update the document
         document.setTitle(title);
         document.setDescription(description);
@@ -850,12 +860,12 @@ public class DocumentResource extends BaseResource {
         } else {
             document.setCreateDate(createDate);
         }
-        
+
         documentDao.update(document, principal.getId());
-        
+
         // Update tags
         updateTagList(id, tagList);
-        
+
         // Update relations
         updateRelationList(id, relationList);
 
@@ -871,7 +881,7 @@ public class DocumentResource extends BaseResource {
         documentUpdatedAsyncEvent.setUserId(principal.getId());
         documentUpdatedAsyncEvent.setDocumentId(id);
         ThreadLocalContext.get().addAsyncEvent(documentUpdatedAsyncEvent);
-        
+
         JsonObjectBuilder response = Json.createObjectBuilder()
                 .add("id", id);
         return Response.ok().entity(response.build()).build();
@@ -880,6 +890,8 @@ public class DocumentResource extends BaseResource {
     /**
      * Import a new document from an EML file.
      *
+     * @param fileBodyPart File to import
+     * @return Response
      * @api {put} /document/eml Import a new document from an EML file
      * @apiName PutDocumentEml
      * @apiGroup Document
@@ -892,9 +904,6 @@ public class DocumentResource extends BaseResource {
      * @apiError (server) FileError Error adding a file
      * @apiPermission user
      * @apiVersion 1.5.0
-     *
-     * @param fileBodyPart File to import
-     * @return Response
      */
     @PUT
     @Path("eml")
@@ -977,6 +986,8 @@ public class DocumentResource extends BaseResource {
     /**
      * Deletes a document.
      *
+     * @param id Document ID
+     * @return Response
      * @api {delete} /document/:id Delete a document
      * @apiName DeleteDocument
      * @apiGroup Document
@@ -986,9 +997,6 @@ public class DocumentResource extends BaseResource {
      * @apiError (client) NotFound Document not found
      * @apiPermission user
      * @apiVersion 1.5.0
-     *
-     * @param id Document ID
-     * @return Response
      */
     @DELETE
     @Path("{id: [a-z0-9\\-]+}")
@@ -1006,7 +1014,7 @@ public class DocumentResource extends BaseResource {
             throw new NotFoundException();
         }
         List<File> fileList = fileDao.getByDocumentId(principal.getId(), id);
-        
+
         // Delete the document
         documentDao.delete(id, principal.getId());
 
@@ -1038,7 +1046,7 @@ public class DocumentResource extends BaseResource {
         documentDeletedAsyncEvent.setUserId(principal.getId());
         documentDeletedAsyncEvent.setDocumentId(id);
         ThreadLocalContext.get().addAsyncEvent(documentDeletedAsyncEvent);
-        
+
         // Always return OK
         JsonObjectBuilder response = Json.createObjectBuilder()
                 .add("status", "ok");
@@ -1049,7 +1057,7 @@ public class DocumentResource extends BaseResource {
      * Update tags list on a document.
      *
      * @param documentId Document ID
-     * @param tagList Tag ID list
+     * @param tagList    Tag ID list
      */
     private void updateTagList(String documentId, List<String> tagList) {
         if (tagList != null) {
@@ -1073,7 +1081,7 @@ public class DocumentResource extends BaseResource {
     /**
      * Update relations list on a document.
      *
-     * @param documentId Document ID
+     * @param documentId   Document ID
      * @param relationList Relation ID list
      */
     private void updateRelationList(String documentId, List<String> relationList) {

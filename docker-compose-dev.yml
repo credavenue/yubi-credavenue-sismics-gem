@@ -11,8 +11,6 @@ services:
       POSTGRES_DB: teedy_dms_db
     ports:
       - 5432:5432
-    volumes:
-      - ~/container-data/teedy/db:/var/lib/postgresql/data
     networks:
       - teedy_network
 
@@ -30,8 +28,6 @@ services:
       JWT_TTL_IN_SECONDS: 500
     ports:
       - 8080:8080
-    volumes:
-      - ~/container-data/teedy/storage:/data
     networks:
       - teedy_network
     depends_on:

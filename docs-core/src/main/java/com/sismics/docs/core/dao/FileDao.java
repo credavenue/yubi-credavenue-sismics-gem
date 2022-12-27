@@ -8,6 +8,7 @@ import com.sismics.util.context.ThreadLocalContext;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -202,6 +203,19 @@ public class FileDao {
         EntityManager em = ThreadLocalContext.get().getEntityManager();
         Query q = em.createQuery("select f from File f where f.versionId = :versionId and f.deleteDate is null order by f.order asc");
         q.setParameter("versionId", versionId);
+        return q.getResultList();
+    }
+
+    /**
+     * Get files by documents IDs.
+     *
+     * @param documentIds Documents IDs
+     * @return List of files
+     */
+    public List<File> getByDocumentsIds(Iterable<String> documentIds) {
+        EntityManager em = ThreadLocalContext.get().getEntityManager();
+        TypedQuery<File> q = em.createQuery("select f from File f where f.documentId in :documentIds and f.latestVersion = true and f.deleteDate is null order by f.order asc", File.class);
+        q.setParameter("documentIds", documentIds);
         return q.getResultList();
     }
 }

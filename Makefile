@@ -30,10 +30,13 @@ deploy_dev:
 deploy_db_dev:
 	$(DOCKER_COMPOSE_DEV) build db
 	$(DOCKER_COMPOSE_DEV) up -d db
-	$(DOCKER_COMPOSE_DEV) ps
+	make ps
 
 stop_containers_dev:
 	$(DOCKER_COMPOSE_DEV) stop
+	make ps
+
+ps:
 	$(DOCKER_COMPOSE_DEV) ps
 
 log_teedy_service_dev:
