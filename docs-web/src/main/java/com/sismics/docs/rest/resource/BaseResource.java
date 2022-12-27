@@ -12,6 +12,7 @@ import com.sismics.docs.core.model.Auth.JWTModel;
 import com.sismics.docs.core.model.jpa.User;
 import com.sismics.docs.rest.constant.BaseFunction;
 import com.sismics.rest.exception.ForbiddenClientException;
+import com.sismics.rest.exception.UnauthorizedClientException;
 import com.sismics.security.IPrincipal;
 import com.sismics.security.UserPrincipal;
 import com.sismics.util.JWTUtil;
@@ -84,7 +85,10 @@ public abstract class BaseResource {
         if (authHeader != null && authHeader.startsWith("Bearer")) {
             // extract token from "Bearer <TOKEN>"
             String token = authHeader.substring(7);
-            return trySetTokenPrincipal(token);
+            if (!trySetTokenPrincipal(token)) {
+                throw new UnauthorizedClientException();
+            }
+            return true;
         }
 
         Principal principal = (Principal) request.getAttribute(SecurityFilter.PRINCIPAL_ATTRIBUTE);

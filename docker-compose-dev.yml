@@ -23,7 +23,7 @@ services:
     restart: unless-stopped
     container_name: teedy_service
     environment:
-      DATABASE_URL: jdbc:postgresql://db:5432/teedy_dms_db
+      DATABASE_URL: db:5432/teedy_dms_db
       DATABASE_USER: dev
       DATABASE_PASSWORD: dev@123
       JWT_SECRET_KEY: nsK0ZekLdM7pnAVe7hoQw8_mAUm4TIbA-oSReF0rKXPImvQE
