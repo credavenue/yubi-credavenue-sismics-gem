@@ -26,6 +26,7 @@ services:
       DATABASE_PASSWORD: dev@123
       JWT_SECRET_KEY: nsK0ZekLdM7pnAVe7hoQw8_mAUm4TIbA-oSReF0rKXPImvQE
       JWT_TTL_IN_SECONDS: 500
+      DOCS_ADMIN_PASSWORD_INIT: $$2a$$12$$7XWZ20jUHFfDJ0xDf3IevOBWeoVbgVHj98SHSBpRke2GXx4OPpt96
     ports:
       - 8080:8080
     networks:

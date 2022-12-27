@@ -109,7 +109,7 @@ public class AppContext {
         if (envAdminPassword != null) {
             UserDao userDao = new UserDao();
             User adminUser = userDao.getById("admin");
-            if (Constants.DEFAULT_ADMIN_PASSWORD.equals(adminUser.getPassword())) {
+            if (!envAdminPassword.equals(adminUser.getPassword())) {
                 adminUser.setPassword(envAdminPassword);
                 userDao.updateHashedPassword(adminUser);
             }

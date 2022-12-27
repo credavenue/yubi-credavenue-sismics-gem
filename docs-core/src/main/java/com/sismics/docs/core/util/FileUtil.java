@@ -126,19 +126,19 @@ public class FileUtil {
         // Validate user quota
         UserDao userDao = new UserDao();
         User user = userDao.getById(userId);
-        if (user.getStorageCurrent() + fileSize > user.getStorageQuota()) {
-            throw new IOException("QuotaReached");
-        }
+//        if (user.getStorageCurrent() + fileSize > user.getStorageQuota()) {
+//            throw new IOException("QuotaReached");
+//        }
 
         // Validate global quota
-        String globalStorageQuotaStr = System.getenv(Constants.GLOBAL_QUOTA_ENV);
-        if (!Strings.isNullOrEmpty(globalStorageQuotaStr)) {
-            long globalStorageQuota = Long.parseLong(globalStorageQuotaStr);
-            long globalStorageCurrent = userDao.getGlobalStorageCurrent();
-            if (globalStorageCurrent + fileSize > globalStorageQuota) {
-                throw new IOException("QuotaReached");
-            }
-        }
+//        String globalStorageQuotaStr = System.getenv(Constants.GLOBAL_QUOTA_ENV);
+//        if (!Strings.isNullOrEmpty(globalStorageQuotaStr)) {
+//            long globalStorageQuota = Long.parseLong(globalStorageQuotaStr);
+//            long globalStorageCurrent = userDao.getGlobalStorageCurrent();
+//            if (globalStorageCurrent + fileSize > globalStorageQuota) {
+//                throw new IOException("QuotaReached");
+//            }
+//        }
 
         // Prepare the file
         File file = new File();
