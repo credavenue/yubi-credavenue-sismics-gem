@@ -410,6 +410,14 @@ public class DocumentResource extends BaseResource {
                         .add("color", tagDto.getColor()));
             }
 
+            // Prepare list of files associated with document
+            FileDao fileDao = new FileDao();
+            List<File> fileList = fileDao.getByDocumentsIds(Collections.singleton(documentDto.getId()));
+            JsonArrayBuilder files = Json.createArrayBuilder();
+            for (File fileDb : fileList) {
+                files.add(RestUtil.fileToJsonObjectBuilder(fileDb));
+            }
+
             documents.add(Json.createObjectBuilder()
                     .add("id", documentDto.getId())
                     .add("highlight", JsonUtil.nullable(documentDto.getHighlight()))
@@ -423,7 +431,9 @@ public class DocumentResource extends BaseResource {
                     .add("active_route", documentDto.isActiveRoute())
                     .add("current_step_name", JsonUtil.nullable(documentDto.getCurrentStepName()))
                     .add("file_count", documentDto.getFileCount())
-                    .add("tags", tags));
+                    .add("tags", tags)
+                    .add("files", files));
+
         }
 
         JsonArrayBuilder suggestions = Json.createArrayBuilder();
