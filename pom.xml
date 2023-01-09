@@ -28,7 +28,6 @@
     <org.slf4j.jcl-over-slf4j.version>1.7.30</org.slf4j.jcl-over-slf4j.version>
     <org.slf4j.jul-to-slf4j.version>1.7.30</org.slf4j.jul-to-slf4j.version>
     <junit.junit.version>4.13.1</junit.junit.version>
-    <com.h2database.h2.version>1.4.199</com.h2database.h2.version>
     <org.glassfish.jersey.version>2.33</org.glassfish.jersey.version>
     <org.glassfish.javax.json.version>1.1.4</org.glassfish.javax.json.version>
     <at.favre.lib.bcrypt.version>0.9.0</at.favre.lib.bcrypt.version>
@@ -43,7 +42,7 @@
     <net.java.dev.jna.jna.version>5.6.0</net.java.dev.jna.jna.version>
     <com.levigo.jbig2.levigo-jbig2-imageio.version>2.0</com.levigo.jbig2.levigo-jbig2-imageio.version>
     <com.github.jai-imageio.jai-imageio-jpeg2000.version>1.4.0</com.github.jai-imageio.jai-imageio-jpeg2000.version>
-    <org.postgresql.postgresql.version>42.2.18</org.postgresql.postgresql.version>
+    <org.postgresql.postgresql.version>42.5.1</org.postgresql.postgresql.version>
     <org.subethamail.subethasmtp-wiser.version>1.2</org.subethamail.subethasmtp-wiser.version>
     <com.icegreen.greenmail.version>1.5.8</com.icegreen.greenmail.version>
     <com.sun.mail.javax.mail.version>1.6.2</com.sun.mail.javax.mail.version>
@@ -319,12 +318,6 @@
         <groupId>org.glassfish</groupId>
         <artifactId>javax.json</artifactId>
         <version>${org.glassfish.javax.json.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.h2database</groupId>
-        <artifactId>h2</artifactId>
-        <version>${com.h2database.h2.version}</version>
       </dependency>
 
       <dependency>
