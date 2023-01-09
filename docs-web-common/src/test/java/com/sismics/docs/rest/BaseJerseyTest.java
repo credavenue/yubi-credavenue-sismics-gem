@@ -29,7 +29,7 @@ import java.util.List;
 
 /**
  * Base class of integration tests with Jersey.
- * 
+ *
  * @author jtremeaux
  */
 public abstract class BaseJerseyTest extends JerseyTest {
@@ -37,7 +37,7 @@ public abstract class BaseJerseyTest extends JerseyTest {
      * Test HTTP server.
      */
     private HttpServer httpServer;
-    
+
     /**
      * Utility class for the REST client.
      */
@@ -47,12 +47,12 @@ public abstract class BaseJerseyTest extends JerseyTest {
      * Test mail server.
      */
     private Wiser wiser;
-    
+
     @Override
     protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
         return new ExternalTestContainerFactory();
     }
-    
+
     @Override
     protected Application configure() {
         String travisEnv = System.getenv("TRAVIS");
@@ -63,12 +63,12 @@ public abstract class BaseJerseyTest extends JerseyTest {
         }
         return new Application();
     }
-    
+
     @Override
     protected URI getBaseUri() {
         return UriBuilder.fromUri(super.getBaseUri()).path("docs").build();
     }
-    
+
     @Override
     @Before
     public void setUp() throws Exception {
@@ -79,7 +79,6 @@ public abstract class BaseJerseyTest extends JerseyTest {
 
         httpServer = HttpServer.createSimpleServer(getClass().getResource("/").getFile(), "localhost", getPort());
         WebappContext context = new WebappContext("GrizzlyContext", "/docs");
-        context.addListener("com.twelvemonkeys.servlet.image.IIOProviderContextListener");
         context.addFilter("requestContextFilter", RequestContextFilter.class)
                 .addMappingForUrlPatterns(null, "/*");
         context.addFilter("tokenBasedSecurityFilter", TokenBasedSecurityFilter.class)
@@ -106,7 +105,7 @@ public abstract class BaseJerseyTest extends JerseyTest {
      *
      * @return Email content
      * @throws MessagingException e
-     * @throws IOException e
+     * @throws IOException        e
      */
     protected String popEmail() throws MessagingException, IOException {
         List<WiserMessage> wiserMessageList = wiser.getMessages();

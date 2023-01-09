@@ -170,16 +170,6 @@
 
     <!-- ImageIO plugins -->
     <dependency>
-      <groupId>com.twelvemonkeys.imageio</groupId>
-      <artifactId>imageio-jpeg</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.twelvemonkeys.imageio</groupId>
-      <artifactId>imageio-tiff</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>com.github.jai-imageio</groupId>
       <artifactId>jai-imageio-jpeg2000</artifactId>
     </dependency>
