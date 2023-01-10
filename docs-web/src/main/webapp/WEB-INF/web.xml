@@ -6,12 +6,6 @@
   version="3.0"
   metadata-complete="true"> 
   <display-name>Teedy</display-name>
-  
-  <!-- Proper loader/unloader of ImageIO plugins -->
-  <listener>
-    <display-name>ImageIO service provider loader/unloader</display-name>
-    <listener-class>com.twelvemonkeys.servlet.image.IIOProviderContextListener</listener-class>
-  </listener>
 
   <!-- This filter handles CORS -->
   <filter>
