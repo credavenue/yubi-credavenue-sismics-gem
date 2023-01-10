@@ -483,12 +483,17 @@ public class FileResource extends BaseResource {
 
         JsonArrayBuilder files = Json.createArrayBuilder();
         for (File fileDb : fileList) {
-            files.add(Json.createObjectBuilder()
-                    .add("id", fileDb.getId())
-                    .add("name", JsonUtil.nullable(fileDb.getName()))
-                    .add("version", fileDb.getVersion())
-                    .add("mimetype", fileDb.getMimeType())
-                    .add("create_date", fileDb.getCreateDate().getTime()));
+            try {
+                files.add(Json.createObjectBuilder()
+                        .add("id", fileDb.getId())
+                        .add("name", JsonUtil.nullable(fileDb.getName()))
+                        .add("version", fileDb.getVersion())
+                        .add("mimetype", fileDb.getMimeType())
+                        .add("create_date", fileDb.getCreateDate().getTime())
+                        .add("size", Files.size(DirectoryUtil.getStorageDirectory().resolve(fileDb.getId()))));
+            } catch (IOException e) {
+                throw new ServerException("FileError", "Unable to get the size of " + fileDb.getId(), e);
+            }
         }
 
         JsonObjectBuilder response = Json.createObjectBuilder()
