@@ -19,7 +19,7 @@ import java.util.zip.ZipInputStream;
 public class MimeTypeUtil {
     /**
      * Try to guess the MIME type of a file by its magic number (header).
-     * 
+     *
      * @param file File to inspect
      * @param name File name
      * @return MIME type
@@ -38,13 +38,22 @@ public class MimeTypeUtil {
 
     /**
      * Try to guess the MIME type of a file by its magic number (header).
-     * 
+     *
      * @param headerBytes File header (first bytes)
      * @param name File name
      * @return MIME type
      * @throws UnsupportedEncodingException e
      */
     public static String guessMimeType(byte[] headerBytes, String name) throws UnsupportedEncodingException {
+        // check for docs and excel
+        if (name != null) {
+            String nameLower = name.toLowerCase();
+            if (nameLower.endsWith(".xlsx") || nameLower.endsWith(".xls")) {
+                return MimeType.OFFICE_SHEET;
+            } else if (name.endsWith(".doxc")||name.endsWith(".doc")) {
+                return MimeType.OFFICE_DOCUMENT;
+            }
+        }
         String header = new String(headerBytes, "US-ASCII");
 
         // Detect by header bytes
@@ -78,10 +87,10 @@ public class MimeTypeUtil {
 
         return MimeType.DEFAULT;
     }
-    
+
     /**
      * Get a file extension linked to a MIME type.
-     * 
+     *
      * @param mimeType MIME type
      * @return File extension
      */
@@ -113,12 +122,12 @@ public class MimeTypeUtil {
                 return "bin";
         }
     }
-    
+
     /**
      * Guess the MIME type of open document formats (docx and odt).
      * It's more costly than the simple header check, but needed because open document formats
      * are simple ZIP files on the outside and much bigger on the inside.
-     * 
+     *
      * @param mimeType Currently detected MIME type
      * @param file File on disk
      * @return MIME type
@@ -128,7 +137,7 @@ public class MimeTypeUtil {
             // open document formats are ZIP files
             return mimeType;
         }
-        
+
         try (InputStream inputStream = Files.newInputStream(file);
              ZipInputStream zipInputStream = new ZipInputStream(inputStream, Charsets.ISO_8859_1)) {
             ZipEntry archiveEntry = zipInputStream.getNextEntry();
@@ -151,14 +160,14 @@ public class MimeTypeUtil {
                         break;
                     }
                 }
-    
+
                 archiveEntry = zipInputStream.getNextEntry();
             }
         } catch (Exception e) {
             // In case of any error, just give up and keep the ZIP MIME type
             return mimeType;
         }
-        
+
         return mimeType;
     }
 }
