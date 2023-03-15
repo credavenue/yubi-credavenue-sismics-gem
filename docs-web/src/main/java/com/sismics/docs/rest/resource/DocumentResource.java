@@ -149,7 +149,9 @@ public class DocumentResource extends BaseResource {
                 .add("update_date", documentDto.getUpdateTimestamp())
                 .add("language", documentDto.getLanguage())
                 .add("shared", documentDto.getShared())
-                .add("file_count", documentDto.getFileCount());
+                .add("file_count", documentDto.getFileCount())
+                .add("processing_detail", JsonUtil.nullable(documentDto.getProcessingDetail()))
+                .add("workflow_detail", JsonUtil.nullable(documentDto.getWorkflowDetail()));
 
         List<TagDto> tagDtoList = null;
         if (principal.isAnonymous()) {
@@ -432,6 +434,8 @@ public class DocumentResource extends BaseResource {
                     .add("current_step_name", JsonUtil.nullable(documentDto.getCurrentStepName()))
                     .add("file_count", documentDto.getFileCount())
                     .add("tags", tags)
+                    .add("processing_detail", JsonUtil.nullable(documentDto.getProcessingDetail()))
+                    .add("workflow_detail", JsonUtil.nullable(documentDto.getWorkflowDetail()))
                     .add("files", files));
 
         }
@@ -818,6 +822,7 @@ public class DocumentResource extends BaseResource {
             @FormParam("metadata_id") List<String> metadataIdList,
             @FormParam("metadata_value") List<String> metadataValueList,
             @FormParam("language") String language,
+            @FormParam("processing_error") String processingError,
             @FormParam("create_date") String createDateStr) {
         if (!authenticate()) {
             throw new ForbiddenClientException();
@@ -884,6 +889,14 @@ public class DocumentResource extends BaseResource {
             MetadataUtil.updateMetadata(document.getId(), metadataIdList, metadataValueList);
         } catch (Exception e) {
             throw new ClientException("ValidationError", e.getMessage());
+        }
+
+        if (processingError != null && !processingError.isBlank()) {
+            try {
+                documentDao.appendProcessingError(id, JsonUtil.nullable(processingError));
+            } catch (Exception e) {
+                // safe catch to process update
+            }
         }
 
         // Raise a document updated event
