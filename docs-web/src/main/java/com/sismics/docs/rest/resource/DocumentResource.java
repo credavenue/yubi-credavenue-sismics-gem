@@ -822,7 +822,6 @@ public class DocumentResource extends BaseResource {
             @FormParam("metadata_id") List<String> metadataIdList,
             @FormParam("metadata_value") List<String> metadataValueList,
             @FormParam("language") String language,
-            @FormParam("processing_error") String processingError,
             @FormParam("create_date") String createDateStr) {
         if (!authenticate()) {
             throw new ForbiddenClientException();
@@ -889,14 +888,6 @@ public class DocumentResource extends BaseResource {
             MetadataUtil.updateMetadata(document.getId(), metadataIdList, metadataValueList);
         } catch (Exception e) {
             throw new ClientException("ValidationError", e.getMessage());
-        }
-
-        if (processingError != null && !processingError.isBlank()) {
-            try {
-                documentDao.appendProcessingError(id, JsonUtil.nullable(processingError));
-            } catch (Exception e) {
-                // safe catch to process update
-            }
         }
 
         // Raise a document updated event
@@ -1071,6 +1062,35 @@ public class DocumentResource extends BaseResource {
         ThreadLocalContext.get().addAsyncEvent(documentDeletedAsyncEvent);
 
         // Always return OK
+        JsonObjectBuilder response = Json.createObjectBuilder()
+                .add("status", "ok");
+        return Response.ok().entity(response.build()).build();
+    }
+
+    @PUT
+    @Path("{id: [a-z0-9\\-]+}/processing-detail")
+    public Response processingDetail(
+            @PathParam("id") String id,
+            @FormParam("processing_error") String processingError
+    ) {
+        if (!authenticate()) {
+            throw new ForbiddenClientException();
+        }
+
+        DocumentDao documentDao = new DocumentDao();
+        Document document = documentDao.getById(id);
+
+        if (document == null) {
+            throw new NotFoundException();
+        }
+
+        if (processingError != null && !processingError.isBlank()) {
+            try {
+                documentDao.appendProcessingError(id, JsonUtil.nullable(processingError));
+            } catch (Exception e) {
+                // safe catch to process update
+            }
+        }
         JsonObjectBuilder response = Json.createObjectBuilder()
                 .add("status", "ok");
         return Response.ok().entity(response.build()).build();
