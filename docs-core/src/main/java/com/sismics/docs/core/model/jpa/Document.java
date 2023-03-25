@@ -1,21 +1,16 @@
 package com.sismics.docs.core.model.jpa;
 
 import com.google.common.base.MoreObjects;
-import com.sismics.util.JsonUtil;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import java.io.StringReader;
 import java.util.Date;
 
 /**
  * Document entity.
- *
+ * 
  * @author bgamard
  */
 @Entity
@@ -27,13 +22,13 @@ public class Document implements Loggable {
     @Id
     @Column(name = "DOC_ID_C", length = 36)
     private String id;
-
+    
     /**
      * User ID.
      */
     @Column(name = "DOC_IDUSER_C", nullable = false, length = 36)
     private String userId;
-
+    
     /**
      * Main file ID.
      */
@@ -45,67 +40,67 @@ public class Document implements Loggable {
      */
     @Column(name = "DOC_LANGUAGE_C", nullable = false, length = 3)
     private String language;
-
+    
     /**
      * Title.
      */
     @Column(name = "DOC_TITLE_C", nullable = false, length = 100)
     private String title;
-
+    
     /**
      * Description.
      */
     @Column(name = "DOC_DESCRIPTION_C", length = 4000)
     private String description;
-
+    
     /**
      * Subject.
      */
     @Column(name = "DOC_SUBJECT_C", length = 500)
     private String subject;
-
+    
     /**
      * Identifer.
      */
     @Column(name = "DOC_IDENTIFIER_C", length = 500)
     private String identifier;
-
+    
     /**
      * Publisher.
      */
     @Column(name = "DOC_PUBLISHER_C", length = 500)
     private String publisher;
-
+    
     /**
      * Format.
      */
     @Column(name = "DOC_FORMAT_C", length = 500)
     private String format;
-
+    
     /**
      * Source.
      */
     @Column(name = "DOC_SOURCE_C", length = 500)
     private String source;
-
+    
     /**
      * Type.
      */
     @Column(name = "DOC_TYPE_C", length = 100)
     private String type;
-
+    
     /**
      * Coverage.
      */
     @Column(name = "DOC_COVERAGE_C", length = 100)
     private String coverage;
-
+    
     /**
      * Rights.
      */
     @Column(name = "DOC_RIGHTS_C", length = 100)
     private String rights;
-
+    
     /**
      * Creation date.
      */
@@ -123,13 +118,7 @@ public class Document implements Loggable {
      */
     @Column(name = "DOC_DELETEDATE_D")
     private Date deleteDate;
-
-    @Column(name = "PROCESSING_DETAIL")
-    private String processingDetail;
-
-    @Column(name = "WORKFLOW_DETAIL")
-    private String workflowDetail;
-
+    
     public String getId() {
         return id;
     }
@@ -137,7 +126,7 @@ public class Document implements Loggable {
     public void setId(String id) {
         this.id = id;
     }
-
+    
     public String getLanguage() {
         return language;
     }
@@ -145,7 +134,7 @@ public class Document implements Loggable {
     public void setLanguage(String language) {
         this.language = language;
     }
-
+    
     public String getUserId() {
         return userId;
     }
@@ -178,7 +167,7 @@ public class Document implements Loggable {
     public void setDescription(String description) {
         this.description = description;
     }
-
+    
     public String getSubject() {
         return subject;
     }
@@ -194,7 +183,7 @@ public class Document implements Loggable {
     public void setIdentifier(String identifier) {
         this.identifier = identifier;
     }
-
+    
     public String getPublisher() {
         return publisher;
     }
@@ -266,14 +255,6 @@ public class Document implements Loggable {
 
     public void setUpdateDate(Date updateDate) {
         this.updateDate = updateDate;
-    }
-
-    public JsonObject getProcessingDetail() {
-        return JsonUtil.convertRawStringJson(this.processingDetail);
-    }
-
-    public JsonObject getWorkflowDetail() {
-        return JsonUtil.convertRawStringJson(this.workflowDetail);
     }
 
     @Override

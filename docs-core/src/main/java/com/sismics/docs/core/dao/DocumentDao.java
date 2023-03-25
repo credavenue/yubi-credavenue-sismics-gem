@@ -7,7 +7,6 @@ import com.sismics.docs.core.model.jpa.Document;
 import com.sismics.docs.core.util.AuditLogUtil;
 import com.sismics.util.context.ThreadLocalContext;
 
-import javax.json.*;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
@@ -18,37 +17,37 @@ import java.util.UUID;
 
 /**
  * Document DAO.
- *
+ * 
  * @author bgamard
  */
 public class DocumentDao {
     /**
      * Creates a new document.
-     *
+     * 
      * @param document Document
-     * @param userId   User ID
+     * @param userId User ID
      * @return New ID
      */
     public String create(Document document, String userId) {
         // Create the UUID
         document.setId(UUID.randomUUID().toString());
         document.setUpdateDate(new Date());
-
+        
         // Create the document
         EntityManager em = ThreadLocalContext.get().getEntityManager();
         em.persist(document);
-
+        
         // Create audit log
         AuditLogUtil.create(document, AuditLogType.CREATE, userId);
-
+        
         return document.getId();
     }
-
+    
     /**
      * Returns the list of all active documents.
      *
      * @param offset Offset
-     * @param limit  Limit
+     * @param limit Limit
      * @return List of documents
      */
     @SuppressWarnings("unchecked")
@@ -62,7 +61,7 @@ public class DocumentDao {
 
     /**
      * Returns the list of all active documents from a user.
-     *
+     * 
      * @param userId User ID
      * @return List of documents
      */
@@ -73,12 +72,12 @@ public class DocumentDao {
         q.setParameter("userId", userId);
         return q.getResultList();
     }
-
+    
     /**
      * Returns an active document with permission checking.
-     *
-     * @param id           Document ID
-     * @param perm         Permission needed
+     * 
+     * @param id Document ID
+     * @param perm Permission needed
      * @param targetIdList List of targets
      * @return Document
      */
@@ -89,7 +88,7 @@ public class DocumentDao {
         }
 
         EntityManager em = ThreadLocalContext.get().getEntityManager();
-        StringBuilder sb = new StringBuilder("select distinct d.DOC_ID_C, d.PROCESSING_DETAIL, d.WORKFLOW_DETAIL, d.DOC_TITLE_C, d.DOC_DESCRIPTION_C, d.DOC_SUBJECT_C, d.DOC_IDENTIFIER_C, d.DOC_PUBLISHER_C, d.DOC_FORMAT_C, d.DOC_SOURCE_C, d.DOC_TYPE_C, d.DOC_COVERAGE_C, d.DOC_RIGHTS_C, d.DOC_CREATEDATE_D, d.DOC_UPDATEDATE_D, d.DOC_LANGUAGE_C, ");
+        StringBuilder sb = new StringBuilder("select distinct d.DOC_ID_C, d.DOC_TITLE_C, d.DOC_DESCRIPTION_C, d.DOC_SUBJECT_C, d.DOC_IDENTIFIER_C, d.DOC_PUBLISHER_C, d.DOC_FORMAT_C, d.DOC_SOURCE_C, d.DOC_TYPE_C, d.DOC_COVERAGE_C, d.DOC_RIGHTS_C, d.DOC_CREATEDATE_D, d.DOC_UPDATEDATE_D, d.DOC_LANGUAGE_C, ");
         sb.append(" (select count(s.SHA_ID_C) from T_SHARE s, T_ACL ac where ac.ACL_SOURCEID_C = d.DOC_ID_C and ac.ACL_TARGETID_C = s.SHA_ID_C and ac.ACL_DELETEDATE_D is null and s.SHA_DELETEDATE_D is null) shareCount, ");
         sb.append(" (select count(f.FIL_ID_C) from T_FILE f where f.FIL_DELETEDATE_D is null and f.FIL_IDDOC_C = d.DOC_ID_C) fileCount, ");
         sb.append(" u.USE_USERNAME_C ");
@@ -106,12 +105,10 @@ public class DocumentDao {
         } catch (NoResultException e) {
             return null;
         }
-
+        
         DocumentDto documentDto = new DocumentDto();
         int i = 0;
         documentDto.setId((String) o[i++]);
-        documentDto.setProcessingDetail((String) o[i++]);
-        documentDto.setWorkflowDetail((String) o[i++]);
         documentDto.setTitle((String) o[i++]);
         documentDto.setDescription((String) o[i++]);
         documentDto.setSubject((String) o[i++]);
@@ -130,21 +127,21 @@ public class DocumentDao {
         documentDto.setCreator((String) o[i]);
         return documentDto;
     }
-
+    
     /**
      * Deletes a document.
-     *
-     * @param id     Document ID
+     * 
+     * @param id Document ID
      * @param userId User ID
      */
     public void delete(String id, String userId) {
         EntityManager em = ThreadLocalContext.get().getEntityManager();
-
+            
         // Get the document
         Query q = em.createQuery("select d from Document d where d.id = :id and d.deleteDate is null");
         q.setParameter("id", id);
         Document documentDb = (Document) q.getSingleResult();
-
+        
         // Delete the document
         Date dateNow = new Date();
         documentDb.setDeleteDate(dateNow);
@@ -154,29 +151,29 @@ public class DocumentDao {
         q.setParameter("documentId", id);
         q.setParameter("dateNow", dateNow);
         q.executeUpdate();
-
+        
         q = em.createQuery("update Acl a set a.deleteDate = :dateNow where a.sourceId = :documentId and a.deleteDate is null");
         q.setParameter("documentId", id);
         q.setParameter("dateNow", dateNow);
         q.executeUpdate();
-
+        
         q = em.createQuery("update DocumentTag dt set dt.deleteDate = :dateNow where dt.documentId = :documentId and dt.deleteDate is not null");
         q.setParameter("documentId", id);
         q.setParameter("dateNow", dateNow);
         q.executeUpdate();
-
+        
         q = em.createQuery("update Relation r set r.deleteDate = :dateNow where (r.fromDocumentId = :documentId or r.toDocumentId = :documentId) and r.deleteDate is not null");
         q.setParameter("documentId", id);
         q.setParameter("dateNow", dateNow);
         q.executeUpdate();
-
+        
         // Create audit log
         AuditLogUtil.create(documentDb, AuditLogType.DELETE, userId);
     }
-
+    
     /**
      * Gets an active document by its ID.
-     *
+     * 
      * @param id Document ID
      * @return Document
      */
@@ -190,12 +187,12 @@ public class DocumentDao {
             return null;
         }
     }
-
+    
     /**
      * Update a document and log the action.
-     *
+     * 
      * @param document Document to update
-     * @param userId   User ID
+     * @param userId User ID
      * @return Updated document
      */
     public Document update(Document document, String userId) {
@@ -221,10 +218,10 @@ public class DocumentDao {
         documentDb.setLanguage(document.getLanguage());
         documentDb.setFileId(document.getFileId());
         documentDb.setUpdateDate(new Date());
-
+        
         // Create audit log
         AuditLogUtil.create(documentDb, AuditLogType.UPDATE, userId);
-
+        
         return documentDb;
     }
 
@@ -252,65 +249,5 @@ public class DocumentDao {
         EntityManager em = ThreadLocalContext.get().getEntityManager();
         Query query = em.createNativeQuery("select count(d.DOC_ID_C) from T_DOCUMENT d where d.DOC_DELETEDATE_D is null");
         return ((Number) query.getSingleResult()).longValue();
-    }
-
-    public void appendProcessingError(String documentId, JsonValue error) {
-        if (error == null) return;
-
-        Document document = getById(documentId);
-        if (document == null) return;
-
-        JsonObject processingDetail = document.getProcessingDetail();
-        if (processingDetail == null) {
-            processingDetail = Json.createObjectBuilder().build();
-        }
-
-        JsonObjectBuilder pdBuilder = Json.createObjectBuilder(processingDetail);
-        JsonArray errors = processingDetail.getJsonArray("errors");
-        if (errors == null) {
-            errors = Json.createArrayBuilder().build();
-        }
-
-        JsonArrayBuilder errorsBuilder = Json.createArrayBuilder(errors);
-        errorsBuilder.add(error);
-        pdBuilder.add("errors", errorsBuilder.build());
-        JsonObject newPd = pdBuilder.build();
-
-        EntityManager em = ThreadLocalContext.get().getEntityManager();
-        Query query = em.createNativeQuery("update T_DOCUMENT d set PROCESSING_DETAIL = :newPd, DOC_UPDATEDATE_D = :updateDate where d.DOC_ID_C = :id");
-        query.setParameter("updateDate", new Date());
-        query.setParameter("newPd", newPd.toString());
-        query.setParameter("id", documentId);
-        query.executeUpdate();
-    }
-
-    public void appendWorkflowComment(String documentId, JsonValue comment) {
-        if (comment == null) return;
-
-        Document document = getById(documentId);
-        if (document == null) return;
-
-        JsonObject workflowDetail = document.getWorkflowDetail();
-        if (workflowDetail == null) {
-            workflowDetail = Json.createObjectBuilder().build();
-        }
-
-        JsonObjectBuilder pdBuilder = Json.createObjectBuilder(workflowDetail);
-        JsonArray comments = workflowDetail.getJsonArray("comments");
-        if (comments == null) {
-            comments = Json.createArrayBuilder().build();
-        }
-
-        JsonArrayBuilder errorsBuilder = Json.createArrayBuilder(comments);
-        errorsBuilder.add(comment);
-        pdBuilder.add("comments", errorsBuilder.build());
-        JsonObject newWd = pdBuilder.build();
-
-        EntityManager em = ThreadLocalContext.get().getEntityManager();
-        Query query = em.createNativeQuery("update T_DOCUMENT d set WORKFLOW_DETAIL = :newWd, DOC_UPDATEDATE_D = :updateDate where d.DOC_ID_C = :id");
-        query.setParameter("updateDate", new Date());
-        query.setParameter("newWd", newWd.toString());
-        query.setParameter("id", documentId);
-        query.executeUpdate();
     }
 }

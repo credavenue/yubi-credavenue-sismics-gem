@@ -17,7 +17,6 @@ import com.sismics.docs.core.util.jpa.SortCriteria;
 import com.sismics.rest.exception.ClientException;
 import com.sismics.rest.exception.ForbiddenClientException;
 import com.sismics.rest.util.ValidationUtil;
-import com.sismics.util.JsonUtil;
 
 import javax.json.*;
 import javax.ws.rs.*;
@@ -27,7 +26,7 @@ import java.util.List;
 
 /**
  * Route REST resources.
- *
+ * 
  * @author bgamard
  */
 @Path("/route")
@@ -35,7 +34,6 @@ public class RouteResource extends BaseResource {
     /**
      * Start a route on a document.
      *
-     * @return Response
      * @api {post} /route/start Start a route on a document
      * @apiName PostRouteStart
      * @apiGroup Route
@@ -48,6 +46,8 @@ public class RouteResource extends BaseResource {
      * @apiError (client) NotFound Route model or document not found
      * @apiPermission user
      * @apiVersion 1.5.0
+     *
+     * @return Response
      */
     @POST
     @Path("start")
@@ -132,7 +132,6 @@ public class RouteResource extends BaseResource {
     /**
      * Validate the current step of a route.
      *
-     * @return Response
      * @api {post} /route/validate Validate the current step of a route
      * @apiName PostRouteValidate
      * @apiGroup Route
@@ -144,6 +143,8 @@ public class RouteResource extends BaseResource {
      * @apiError (client) NotFound Document or route not found
      * @apiPermission user
      * @apiVersion 1.5.0
+     *
+     * @return Response
      */
     @POST
     @Path("validate")
@@ -208,21 +209,9 @@ public class RouteResource extends BaseResource {
         routeStepDao.endRouteStep(routeStepDto.getId(), routeStepTransition, comment, principal.getId());
         RouteStepDto newRouteStep = routeStepDao.getCurrentStep(documentId);
         RoutingUtil.updateAcl(documentId, newRouteStep, routeStepDto, principal.getId());
-
-        // update workflow comment in doc metadata
-        try {
-            documentDao.appendWorkflowComment(documentId, JsonUtil.nullable(comment));
-        } catch (Exception ex) {
-            // safe catch to process workflow
+        if (newRouteStep != null) {
+            RoutingUtil.sendRouteStepEmail(documentId, newRouteStep);
         }
-
-        /**
-         * disabled email
-         if (newRouteStep != null) {
-         RoutingUtil.sendRouteStepEmail(documentId, newRouteStep);
-         }
-         *
-         */
 
         JsonObjectBuilder response = Json.createObjectBuilder()
                 .add("readable", aclDao.checkPermission(documentId, PermType.READ, getTargetIdList(null)));
@@ -237,8 +226,6 @@ public class RouteResource extends BaseResource {
     /**
      * Returns the routes on a document.
      *
-     * @param documentId Document ID
-     * @return Response
      * @api {get} /route Get the routes on a document
      * @apiName GetRoutes
      * @apiGroup Route
@@ -260,6 +247,9 @@ public class RouteResource extends BaseResource {
      * @apiError (client) NotFound Document not found
      * @apiPermission none
      * @apiVersion 1.5.0
+     *
+     * @param documentId Document ID
+     * @return Response
      */
     @GET
     public Response get(@QueryParam("documentId") String documentId) {
@@ -302,7 +292,6 @@ public class RouteResource extends BaseResource {
     /**
      * Cancel a route.
      *
-     * @return Response
      * @api {delete} /route Cancel a route
      * @apiName DeleteRoute
      * @apiGroup Route
@@ -312,6 +301,8 @@ public class RouteResource extends BaseResource {
      * @apiError (client) NotFound Document or route not found
      * @apiPermission user
      * @apiVersion 1.5.0
+     *
+     * @return Response
      */
     @DELETE
     public Response delete(@QueryParam("documentId") String documentId) {
