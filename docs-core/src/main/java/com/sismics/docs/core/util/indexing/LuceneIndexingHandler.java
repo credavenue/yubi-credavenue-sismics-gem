@@ -244,8 +244,8 @@ public class LuceneIndexingHandler implements IndexingHandler {
         sb.append(" s.count c5, ");
         sb.append(" f.count c6, ");
         sb.append(" rs2.RTP_ID_C c7, rs2.RTP_NAME_C, d.DOC_UPDATEDATE_D c8, ");
-        sb.append(" d.PROCESSING_DETAIL c9 ");
-        sb.append(" d.WORKFLOW_DETAIL c9 ");
+        sb.append(" d.PROCESSING_DETAIL c9, ");
+        sb.append(" d.WORKFLOW_DETAIL c10 ");
         sb.append(" from T_DOCUMENT d ");
         sb.append(" left join (SELECT count(s.SHA_ID_C) count, ac.ACL_SOURCEID_C " +
                 "   FROM T_SHARE s, T_ACL ac " +
