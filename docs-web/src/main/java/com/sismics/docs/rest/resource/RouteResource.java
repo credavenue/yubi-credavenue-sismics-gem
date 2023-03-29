@@ -210,10 +210,13 @@ public class RouteResource extends BaseResource {
         RoutingUtil.updateAcl(documentId, newRouteStep, routeStepDto, principal.getId());
 
         // update workflow comment in doc metadata
-        try {
-            documentDao.appendWorkflowComment(documentId, JsonUtil.nullable(comment));
-        } catch (Exception ex) {
-            // safe catch to process workflow
+
+        if (comment != null && !comment.isBlank()) {
+            try {
+                documentDao.appendWorkflowComment(documentId, JsonUtil.nullable(comment));
+            } catch (Exception ex) {
+                // safe catch to process workflow
+            }
         }
 
         /**
