@@ -1,9 +1,17 @@
 package com.sismics.docs.core.dao.dto;
 
+import com.sismics.util.JsonUtil;
+
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.persistence.Column;
+import java.io.StringReader;
+
 /**
  * Document DTO.
  *
- * @author bgamard 
+ * @author bgamard
  */
 public class DocumentDto {
     /**
@@ -20,62 +28,62 @@ public class DocumentDto {
      * Title.
      */
     private String title;
-    
+
     /**
      * Description.
      */
     private String description;
-    
+
     /**
      * Subject.
      */
     private String subject;
-    
+
     /**
      * Identifier.
      */
     private String identifier;
-    
+
     /**
      * Publisher.
      */
     private String publisher;
-    
+
     /**
      * Format.
      */
     private String format;
-    
+
     /**
      * Source.
      */
     private String source;
-    
+
     /**
      * Type.
      */
     private String type;
-    
+
     /**
      * Coverage.
      */
     private String coverage;
-    
+
     /**
      * Rights.
      */
     private String rights;
-    
+
     /**
      * Language.
      */
     private String language;
-    
+
     /**
      * Creation date.
      */
     private Long createTimestamp;
-    
+
     /**
      * Update date.
      */
@@ -90,7 +98,7 @@ public class DocumentDto {
      * File count.
      */
     private Integer fileCount;
-    
+
     /**
      * Document creator.
      */
@@ -110,6 +118,10 @@ public class DocumentDto {
      * Search highlight.
      */
     private String highlight;
+
+
+    private String processingDetail;
+    private String workflowDetail;
 
     public String getId() {
         return id;
@@ -159,7 +171,7 @@ public class DocumentDto {
     public void setIdentifier(String identifier) {
         this.identifier = identifier;
     }
-    
+
     public String getPublisher() {
         return publisher;
     }
@@ -281,4 +293,21 @@ public class DocumentDto {
         this.highlight = highlight;
         return this;
     }
+
+    public JsonObject getProcessingDetail() {
+        return JsonUtil.convertRawStringJson(this.processingDetail);
+    }
+
+    public void setProcessingDetail(String processingDetail) {
+        this.processingDetail = processingDetail;
+    }
+
+    public JsonObject getWorkflowDetail() {
+        return JsonUtil.convertRawStringJson(this.workflowDetail);
+    }
+
+    public void setWorkflowDetail(String workflowDetail) {
+        this.workflowDetail = workflowDetail;
+    }
+
 }
