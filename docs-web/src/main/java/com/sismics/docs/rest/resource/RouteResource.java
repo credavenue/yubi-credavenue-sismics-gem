@@ -154,6 +154,7 @@ public class RouteResource extends BaseResource {
             throw new ForbiddenClientException();
         }
 
+        String rawComment = comment;
         // Get the document
         AclDao aclDao = new AclDao();
         DocumentDao documentDao = new DocumentDao();
@@ -211,9 +212,9 @@ public class RouteResource extends BaseResource {
 
         // update workflow comment in doc metadata
 
-        if (comment != null && !comment.isBlank()) {
+        if (rawComment != null && !rawComment.isBlank()) {
             try {
-                documentDao.appendWorkflowComment(documentId, JsonUtil.nullable(comment));
+                documentDao.appendWorkflowComment(documentId, JsonUtil.nullable(rawComment));
             } catch (Exception ex) {
                 // safe catch to process workflow
             }
