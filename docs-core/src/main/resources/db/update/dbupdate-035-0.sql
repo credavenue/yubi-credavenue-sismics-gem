@@ -1,0 +1,1 @@
+alter table T_DOCUMENT add column IS_SCANNED BOOLEAN DEFAULT FALSE;
