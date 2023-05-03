@@ -123,6 +123,8 @@ public class DocumentDto {
     private String processingDetail;
     private String workflowDetail;
 
+    private Boolean isScanned;
+
     public String getId() {
         return id;
     }
@@ -310,4 +312,11 @@ public class DocumentDto {
         this.workflowDetail = workflowDetail;
     }
 
+    public Boolean getScanned() {
+        return isScanned;
+    }
+
+    public void setScanned(Boolean scanned) {
+        this.isScanned = scanned;
+    }
 }

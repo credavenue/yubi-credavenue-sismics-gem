@@ -151,7 +151,8 @@ public class DocumentResource extends BaseResource {
                 .add("shared", documentDto.getShared())
                 .add("file_count", documentDto.getFileCount())
                 .add("processing_detail", JsonUtil.nullable(documentDto.getProcessingDetail()))
-                .add("workflow_detail", JsonUtil.nullable(documentDto.getWorkflowDetail()));
+                .add("workflow_detail", JsonUtil.nullable(documentDto.getWorkflowDetail()))
+                .add("is_scanned", documentDto.getScanned());
 
         List<TagDto> tagDtoList = null;
         if (principal.isAnonymous()) {
@@ -436,6 +437,7 @@ public class DocumentResource extends BaseResource {
                     .add("tags", tags)
                     .add("processing_detail", JsonUtil.nullable(documentDto.getProcessingDetail()))
                     .add("workflow_detail", JsonUtil.nullable(documentDto.getWorkflowDetail()))
+                    .add("is_scanned", documentDto.getScanned())
                     .add("files", files));
 
         }
@@ -701,7 +703,8 @@ public class DocumentResource extends BaseResource {
             @FormParam("metadata_id") List<String> metadataIdList,
             @FormParam("metadata_value") List<String> metadataValueList,
             @FormParam("language") String language,
-            @FormParam("create_date") String createDateStr) {
+            @FormParam("create_date") String createDateStr,
+            @FormParam("is_scanned") Boolean isScanned) {
         if (!authenticate()) {
             throw new ForbiddenClientException();
         }
@@ -719,6 +722,7 @@ public class DocumentResource extends BaseResource {
         coverage = ValidationUtil.validateLength(coverage, "coverage", 0, 100, true);
         rights = ValidationUtil.validateLength(rights, "rights", 0, 100, true);
         Date createDate = ValidationUtil.validateDate(createDateStr, "create_date", true);
+        isScanned = (isScanned!=null) ? isScanned : false;
         if (!Constants.SUPPORTED_LANGUAGES.contains(language)) {
             throw new ClientException("ValidationError", MessageFormat.format("{0} is not a supported language", language));
         }
@@ -737,6 +741,7 @@ public class DocumentResource extends BaseResource {
         document.setCoverage(coverage);
         document.setRights(rights);
         document.setLanguage(language);
+        document.setScanned(isScanned);
         if (createDate == null) {
             document.setCreateDate(new Date());
         } else {
@@ -822,7 +827,8 @@ public class DocumentResource extends BaseResource {
             @FormParam("metadata_id") List<String> metadataIdList,
             @FormParam("metadata_value") List<String> metadataValueList,
             @FormParam("language") String language,
-            @FormParam("create_date") String createDateStr) {
+            @FormParam("create_date") String createDateStr,
+            @FormParam("is_scanned") Boolean isScanned) {
         if (!authenticate()) {
             throw new ForbiddenClientException();
         }
@@ -840,6 +846,7 @@ public class DocumentResource extends BaseResource {
         coverage = ValidationUtil.validateLength(coverage, "coverage", 0, 100, true);
         rights = ValidationUtil.validateLength(rights, "rights", 0, 100, true);
         Date createDate = ValidationUtil.validateDate(createDateStr, "create_date", true);
+        isScanned = (isScanned!=null) ? isScanned : false;
         if (language != null && !Constants.SUPPORTED_LANGUAGES.contains(language)) {
             throw new ClientException("ValidationError", MessageFormat.format("{0} is not a supported language", language));
         }
@@ -869,6 +876,7 @@ public class DocumentResource extends BaseResource {
         document.setCoverage(coverage);
         document.setRights(rights);
         document.setLanguage(language);
+        document.setScanned(isScanned);
         if (createDate == null) {
             document.setCreateDate(new Date());
         } else {
