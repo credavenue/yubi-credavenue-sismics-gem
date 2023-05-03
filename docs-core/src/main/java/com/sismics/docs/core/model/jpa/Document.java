@@ -130,6 +130,9 @@ public class Document implements Loggable {
     @Column(name = "WORKFLOW_DETAIL")
     private String workflowDetail;
 
+    @Column(name = "IS_SCANNED")
+    private Boolean isScanned;
+
     public String getId() {
         return id;
     }
@@ -274,6 +277,15 @@ public class Document implements Loggable {
 
     public JsonObject getWorkflowDetail() {
         return JsonUtil.convertRawStringJson(this.workflowDetail);
+    }
+
+
+    public Boolean getScanned() {
+        return isScanned;
+    }
+
+    public void setScanned(Boolean scanned) {
+        this.isScanned = scanned;
     }
 
     @Override
