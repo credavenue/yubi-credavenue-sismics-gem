@@ -356,6 +356,8 @@ public class LuceneIndexingHandler implements IndexingHandler {
 
         // Perform the search
         QueryParam queryParam = new QueryParam(sb.toString(), parameterMap);
+
+        log.info("Logging Query => "+ sb);
         List<Object[]> l = PaginatedLists.executePaginatedQuery(paginatedList, queryParam, sortCriteria);
 
         // Assemble results
