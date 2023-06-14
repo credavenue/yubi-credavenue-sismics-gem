@@ -51,6 +51,7 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
+import javax.persistence.criteria.CriteriaBuilder;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
@@ -71,6 +72,7 @@ import java.util.*;
 @Path("/document")
 public class DocumentResource extends BaseResource {
     private static Logger log = LoggerFactory.getLogger(DocumentResource.class);
+
     /**
      * Returns a document.
      *
@@ -385,6 +387,8 @@ public class DocumentResource extends BaseResource {
             @QueryParam("sort_column") Integer sortColumn,
             @QueryParam("asc") Boolean asc,
             @QueryParam("search") String search) {
+        String requestId = UUID.randomUUID().toString();
+        log.info("Using Log for => " + requestId);
         Instant startTime = Instant.now();
         if (!authenticate()) {
             throw new ForbiddenClientException();
@@ -399,12 +403,19 @@ public class DocumentResource extends BaseResource {
         SortCriteria sortCriteria = new SortCriteria(sortColumn, asc);
         DocumentCriteria documentCriteria = parseSearchQuery(search);
         documentCriteria.setTargetIdList(getTargetIdList(null));
+        Instant startTime5 = Instant.now();
         try {
             AppContext.getInstance().getIndexingHandler().findByCriteria(paginatedList, suggestionList, documentCriteria, sortCriteria);
         } catch (Exception e) {
             throw new ServerException("SearchError", "Error searching in documents", e);
         }
+        log.info(requestId + " 1 . DocumentResource TotalTime Take => " + Duration.between(startTime5, Instant.now()).toMillis());
+        int fileIdx = 0;
+
+        Instant startTime4 = Instant.now();
         for (DocumentDto documentDto : paginatedList.getResultList()) {
+            fileIdx++;
+            Instant startTime2 = Instant.now();
             // Get tags accessible by the current user on this document
             List<TagDto> tagDtoList = tagDao.findByCriteria(new TagCriteria()
                     .setTargetIdList(getTargetIdList(null))
@@ -416,7 +427,8 @@ public class DocumentResource extends BaseResource {
                         .add("name", tagDto.getName())
                         .add("color", tagDto.getColor()));
             }
-            log.info("2 DocumentResource TotalTime Take => "+ Duration.between(startTime,Instant.now()).toMillis());
+            log.info(requestId + " 2 ." + fileIdx + "DocumentResource TotalTime Take => " + Duration.between(startTime2, Instant.now()).toMillis());
+            Instant startTime3 = Instant.now();
             // Prepare list of files associated with document
             FileDao fileDao = new FileDao();
             List<File> fileList = fileDao.getByDocumentsIds(Collections.singleton(documentDto.getId()));
@@ -424,7 +436,7 @@ public class DocumentResource extends BaseResource {
             for (File fileDb : fileList) {
                 files.add(RestUtil.fileToJsonObjectBuilder(fileDb));
             }
-            log.info("3 DocumentResource TotalTime Take => "+ Duration.between(startTime,Instant.now()).toMillis());
+            log.info(requestId + " 3 ." + fileIdx + " DocumentResource TotalTime Take => " + Duration.between(startTime3, Instant.now()).toMillis());
 
 
             documents.add(Json.createObjectBuilder()
@@ -451,12 +463,12 @@ public class DocumentResource extends BaseResource {
         for (String suggestion : suggestionList) {
             suggestions.add(suggestion);
         }
-        log.info("4 DocumentResource TotalTime Take => "+ Duration.between(startTime,Instant.now()).toMillis());
+        log.info(requestId + " 4 DocumentResource TotalTime Take => " + Duration.between(startTime4, Instant.now()).toMillis());
 
         response.add("total", paginatedList.getResultCount())
                 .add("documents", documents)
                 .add("suggestions", suggestions);
-        log.info("5 DocumentResource TotalTime Take => "+ Duration.between(startTime,Instant.now()).toMillis());
+        log.info(requestId + " 5 Full DocumentResource TotalTime Take => " + Duration.between(startTime, Instant.now()).toMillis());
         return Response.ok().entity(response.build()).build();
     }
 

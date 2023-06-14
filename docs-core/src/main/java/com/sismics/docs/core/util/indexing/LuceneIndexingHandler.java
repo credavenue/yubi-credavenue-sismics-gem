@@ -362,7 +362,7 @@ public class LuceneIndexingHandler implements IndexingHandler {
         log.info("Logging Query => "+ sb);
         Instant startTime = Instant.now();
         List<Object[]> l = PaginatedLists.executePaginatedQuery(paginatedList, queryParam, sortCriteria);
-        log.info("Total Time After executing "+ Duration.between(startTime,Instant.now()).toMillis());
+        log.info("Time Taken for the query "+ Duration.between(startTime,Instant.now()).toMillis());
 
         // Assemble results
         List<DocumentDto> documentDtoList = new ArrayList<>();
