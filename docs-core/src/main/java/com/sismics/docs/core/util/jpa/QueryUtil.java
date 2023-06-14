@@ -6,6 +6,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
 import com.sismics.util.context.ThreadLocalContext;
+import org.hibernate.query.internal.NativeQueryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +30,8 @@ public class QueryUtil {
         for (Entry<String, Object> entry : queryParam.getParameterMap().entrySet()) {
             query.setParameter(entry.getKey(), entry.getValue());
         }
-        log.info("QueryUtil::getNativeQuery =>"+ query.toString());
+        if(query instanceof NativeQueryImpl)
+        log.info("QueryUtil::getNativeQuery =>"+ ((NativeQueryImpl<?>) query).getQueryString());
         return query;
     }
     
