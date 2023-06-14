@@ -41,6 +41,8 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.DateTimeFormatterBuilder;
 import org.joda.time.format.DateTimeParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
@@ -57,6 +59,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.text.MessageFormat;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 
 /**
@@ -66,6 +70,7 @@ import java.util.*;
  */
 @Path("/document")
 public class DocumentResource extends BaseResource {
+    private static Logger log = LoggerFactory.getLogger(DocumentResource.class);
     /**
      * Returns a document.
      *
@@ -380,6 +385,7 @@ public class DocumentResource extends BaseResource {
             @QueryParam("sort_column") Integer sortColumn,
             @QueryParam("asc") Boolean asc,
             @QueryParam("search") String search) {
+        Instant startTime = Instant.now();
         if (!authenticate()) {
             throw new ForbiddenClientException();
         }
@@ -398,7 +404,6 @@ public class DocumentResource extends BaseResource {
         } catch (Exception e) {
             throw new ServerException("SearchError", "Error searching in documents", e);
         }
-
         for (DocumentDto documentDto : paginatedList.getResultList()) {
             // Get tags accessible by the current user on this document
             List<TagDto> tagDtoList = tagDao.findByCriteria(new TagCriteria()
@@ -411,7 +416,7 @@ public class DocumentResource extends BaseResource {
                         .add("name", tagDto.getName())
                         .add("color", tagDto.getColor()));
             }
-
+            log.info("2 DocumentResource TotalTime Take => "+ Duration.between(startTime,Instant.now()).toMillis());
             // Prepare list of files associated with document
             FileDao fileDao = new FileDao();
             List<File> fileList = fileDao.getByDocumentsIds(Collections.singleton(documentDto.getId()));
@@ -419,6 +424,8 @@ public class DocumentResource extends BaseResource {
             for (File fileDb : fileList) {
                 files.add(RestUtil.fileToJsonObjectBuilder(fileDb));
             }
+            log.info("3 DocumentResource TotalTime Take => "+ Duration.between(startTime,Instant.now()).toMillis());
+
 
             documents.add(Json.createObjectBuilder()
                     .add("id", documentDto.getId())
@@ -444,11 +451,12 @@ public class DocumentResource extends BaseResource {
         for (String suggestion : suggestionList) {
             suggestions.add(suggestion);
         }
+        log.info("4 DocumentResource TotalTime Take => "+ Duration.between(startTime,Instant.now()).toMillis());
 
         response.add("total", paginatedList.getResultCount())
                 .add("documents", documents)
                 .add("suggestions", suggestions);
-
+        log.info("5 DocumentResource TotalTime Take => "+ Duration.between(startTime,Instant.now()).toMillis());
         return Response.ok().entity(response.build()).build();
     }
 

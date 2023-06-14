@@ -6,6 +6,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
 import com.sismics.util.context.ThreadLocalContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Query utilities.
@@ -13,6 +15,7 @@ import com.sismics.util.context.ThreadLocalContext;
  * @author jtremeaux 
  */
 public class QueryUtil {
+    private static Logger log = LoggerFactory.getLogger(QueryUtil.class);
 
     /**
      * Creates a native query from the query parameters.
@@ -26,6 +29,7 @@ public class QueryUtil {
         for (Entry<String, Object> entry : queryParam.getParameterMap().entrySet()) {
             query.setParameter(entry.getKey(), entry.getValue());
         }
+        log.info("QueryUtil::getNativeQuery =>"+ query.toString());
         return query;
     }
     
