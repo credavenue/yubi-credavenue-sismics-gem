@@ -47,6 +47,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Timestamp;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 
 /**
@@ -358,7 +360,9 @@ public class LuceneIndexingHandler implements IndexingHandler {
         QueryParam queryParam = new QueryParam(sb.toString(), parameterMap);
 
         log.info("Logging Query => "+ sb);
+        Instant startTime = Instant.now();
         List<Object[]> l = PaginatedLists.executePaginatedQuery(paginatedList, queryParam, sortCriteria);
+        log.info("Total Time After executing "+ Duration.between(startTime,Instant.now()).toMillis());
 
         // Assemble results
         List<DocumentDto> documentDtoList = new ArrayList<>();
